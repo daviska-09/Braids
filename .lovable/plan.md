@@ -1,22 +1,44 @@
 
 
-## Plan: Add Thread Lines Connecting Dots on the Globe
+## Plan: Clickable Globe Threads — Navigate to Filtered Collection
 
-### Concept
-Draw curved lines (arcs) on the globe surface connecting nearby dots to each other, evoking the metaphor of threads linking textile origins across cultures and geographies. The threads will be semi-transparent, thin lines that arc slightly above the globe surface.
+### Overview
+Make the thread arcs on the globe clickable. Clicking a thread navigates to the collection page (`/`) filtered by the two geographic origins that thread connects.
 
-### Implementation — `src/components/Globe.tsx`
+### Changes
 
-**Generate thread connections:** After computing dot positions, create a set of connections by linking each point to its 2-3 nearest neighbors (with a max distance threshold to avoid spanning the entire globe). Use a deterministic seed from point indices to keep it stable. Cap total threads at ~150 to maintain performance and visual clarity.
+**1. Update Globe component to support click interaction**
+File: `src/components/Globe.tsx`
 
-**Draw arcs as QuadraticBezierCurve3:** For each connection pair, compute a curved path that arcs slightly above the globe surface (lifting the midpoint to ~1.08 radius). Use `THREE.QuadraticBezierCurve3` to get smooth arc points, then render each as a `THREE.Line` with a thin, semi-transparent material (e.g., `color: 0x999999, opacity: 0.15`).
+- Store metadata (city/region names) alongside each point, not just lat/lng coordinates
+- Add Three.js `Raycaster` to detect clicks on thread line geometries
+- On click, identify which thread was hit, determine the two connected origin labels, and call a new `onThreadClick` callback prop
+- Add a visual hover state: change cursor to pointer and subtly highlight the hovered thread (increase opacity or change color)
 
-**Add to scene group:** Add all thread lines to the same rotating `THREE.Group` so they rotate with the globe and dots.
+**2. Pass origin labels from Uncovered page**
+File: `src/pages/Uncovered.tsx`
 
-**No changes needed to `Uncovered.tsx`** — the points data stays the same; threads are purely a visual layer in the Globe component.
+- Extend `SAMPLE_POINTS` to include a `label` field (e.g., `{ lat: 35.68, lng: 139.69, label: "Tokyo" }`)
+- Update `generateDensePoints` to carry labels from their reference point
+- Pass an `onThreadClick` handler to `<Globe>` that calls `navigate('/?origins=Tokyo,Delhi')` using React Router
+
+**3. Support origin filter on the Gallery/Collection page**
+File: `src/pages/Gallery.tsx`
+
+- Read `origins` query parameter from the URL
+- When present, display a filter banner showing the active origin filter with a clear button
+- Filter displayed artworks by matching the `artistNationality`, `country`, or `culture` fields from Met API data against the origin labels
+- When filter is cleared, remove query param and show all artworks
+
+### Technical Details
+
+- **Raycasting on lines**: Three.js `Raycaster` has limited line intersection support. We'll increase each thread's raycast threshold (~0.05) and use `raycaster.intersectObjects(threadLines)` on click events
+- **Hover effect**: On `mousemove`, run raycaster and toggle thread material opacity (0.15 → 0.5) plus set `cursor: pointer` on the canvas
+- **Props change**: `GlobeProps` becomes `{ points: { lat, lng, label }[]; onThreadClick?: (originA: string, originB: string) => void }`
+- **URL-based filtering**: Uses `useSearchParams` from React Router so filtered views are shareable
 
 ### Visual Result
-- Thin, slightly curved arcs connecting nearby origin dots
-- Low opacity so they don't overwhelm the dots
-- Evokes woven threads spanning the globe — matching the "Braid" concept
+- Threads glow subtly on hover with a pointer cursor
+- Clicking navigates to collection page showing artworks from both connected origins
+- A small banner at the top of the collection shows active filter with dismiss option
 
