@@ -67,7 +67,7 @@ const Uncovered = () => {
       <div className="max-w-xl mt-2 mb-12">
         <h1 className="font-serif text-3xl md:text-4xl font-normal mb-4">archive explored</h1>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          each dot is a work we've explored, placed where its artist is from. the
+          each dot is a work we've explored, placed where its origin is from. the
           globe grows denser the more we discover.
         </p>
         {totalIds > 0 && (
