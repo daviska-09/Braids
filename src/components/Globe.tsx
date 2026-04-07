@@ -1,8 +1,15 @@
 import { useRef, useEffect, useMemo } from "react";
 import * as THREE from "three";
 
+export interface GlobePoint {
+  lat: number;
+  lng: number;
+  label: string;
+}
+
 interface GlobeProps {
-  points: { lat: number; lng: number }[];
+  points: GlobePoint[];
+  onThreadClick?: (originA: string, originB: string) => void;
 }
 
 function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
@@ -17,7 +24,7 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
 
 function generateThreads(positions: THREE.Vector3[], maxThreads = 150) {
   const connections: [number, number][] = [];
-  const maxDist = 1.2; // max chord distance between connected dots
+  const maxDist = 1.2;
 
   for (let i = 0; i < positions.length; i++) {
     const neighbors: { idx: number; dist: number }[] = [];
@@ -36,10 +43,11 @@ function generateThreads(positions: THREE.Vector3[], maxThreads = 150) {
   return connections;
 }
 
-const Globe = ({ points }: GlobeProps) => {
+const Globe = ({ points, onThreadClick }: GlobeProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const isDragging = useRef(false);
+  const didDrag = useRef(false);
   const prevMouse = useRef({ x: 0, y: 0 });
   const rotation = useRef({ x: 0.3, y: 0 });
 
@@ -106,13 +114,11 @@ const Globe = ({ points }: GlobeProps) => {
     scene.add(dotCloud);
 
     // Thread lines connecting dots
-    const threadMat = new THREE.LineBasicMaterial({
-      color: 0x999999,
-      transparent: true,
-      opacity: 0.15,
-    });
-
+    const defaultThreadColor = 0x999999;
+    const hoverThreadColor = 0x444444;
     const threadLines: THREE.Line[] = [];
+    const threadMeta: { indexA: number; indexB: number }[] = [];
+
     for (const [iA, iB] of threads) {
       const a = dotPositions[iA];
       const b = dotPositions[iB];
@@ -121,13 +127,31 @@ const Globe = ({ points }: GlobeProps) => {
       const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
       const curvePoints = curve.getPoints(20);
       const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
-      const line = new THREE.Line(lineGeo, threadMat);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: defaultThreadColor,
+        transparent: true,
+        opacity: 0.15,
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
       threadLines.push(line);
+      threadMeta.push({ indexA: iA, indexB: iB });
     }
 
     const group = new THREE.Group();
     group.add(globe, circle, dotCloud, ...threadLines);
     scene.add(group);
+
+    // Raycaster for thread interaction
+    const raycaster = new THREE.Raycaster();
+    (raycaster.params as any).Line = { threshold: 0.05 };
+    const mouse = new THREE.Vector2();
+    let hoveredLine: THREE.Line | null = null;
+
+    const getMouseNDC = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    };
 
     const animate = () => {
       if (!isDragging.current) {
@@ -142,18 +166,62 @@ const Globe = ({ points }: GlobeProps) => {
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging.current = true;
+      didDrag.current = false;
       prevMouse.current = { x: e.clientX, y: e.clientY };
     };
     const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const dx = e.clientX - prevMouse.current.x;
-      const dy = e.clientY - prevMouse.current.y;
-      rotation.current.y += dx * 0.005;
-      rotation.current.x += dy * 0.005;
-      prevMouse.current = { x: e.clientX, y: e.clientY };
+      if (isDragging.current) {
+        const dx = e.clientX - prevMouse.current.x;
+        const dy = e.clientY - prevMouse.current.y;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) didDrag.current = true;
+        rotation.current.y += dx * 0.005;
+        rotation.current.x += dy * 0.005;
+        prevMouse.current = { x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      // Hover detection
+      getMouseNDC(e);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(threadLines);
+
+      if (hoveredLine && hoveredLine !== intersects[0]?.object) {
+        (hoveredLine.material as THREE.LineBasicMaterial).color.setHex(defaultThreadColor);
+        (hoveredLine.material as THREE.LineBasicMaterial).opacity = 0.15;
+        hoveredLine = null;
+      }
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object as THREE.Line;
+        (hit.material as THREE.LineBasicMaterial).color.setHex(hoverThreadColor);
+        (hit.material as THREE.LineBasicMaterial).opacity = 0.5;
+        hoveredLine = hit;
+        container.style.cursor = "pointer";
+      } else {
+        container.style.cursor = "grab";
+      }
     };
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
+      const wasDrag = didDrag.current;
       isDragging.current = false;
+      didDrag.current = false;
+
+      if (wasDrag || !onThreadClick) return;
+
+      getMouseNDC(e);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(threadLines);
+      if (intersects.length > 0) {
+        const idx = threadLines.indexOf(intersects[0].object as THREE.Line);
+        if (idx >= 0) {
+          const meta = threadMeta[idx];
+          const labelA = points[meta.indexA]?.label;
+          const labelB = points[meta.indexB]?.label;
+          if (labelA && labelB) {
+            onThreadClick(labelA, labelB);
+          }
+        }
+      }
     };
 
     container.addEventListener("mousedown", onMouseDown);
@@ -177,7 +245,7 @@ const Globe = ({ points }: GlobeProps) => {
       renderer.dispose();
       container.removeChild(renderer.domElement);
     };
-  }, [dotPositions, threads]);
+  }, [dotPositions, threads, points, onThreadClick]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 };
