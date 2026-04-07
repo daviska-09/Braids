@@ -70,27 +70,47 @@ export async function fetchTextileObjectIds(): Promise<number[]> {
   return ids;
 }
 
-export async function fetchObject(id: number): Promise<MetObject | null> {
+async function delay(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+export async function fetchObject(id: number, retries = 2): Promise<MetObject | null> {
   if (objectCache.has(id)) return objectCache.get(id)!;
-  try {
-    const res = await fetch(`${BASE}/objects/${id}`);
-    if (!res.ok) return null;
-    const obj: MetObject = await res.json();
-    if (!obj.primaryImageSmall) return null;
-    objectCache.set(id, obj);
-    return obj;
-  } catch {
-    return null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`${BASE}/objects/${id}`);
+      if (res.status === 429) {
+        await delay(1000 * (attempt + 1));
+        continue;
+      }
+      if (!res.ok) return null;
+      const obj: MetObject = await res.json();
+      if (!obj.primaryImageSmall) return null;
+      objectCache.set(id, obj);
+      return obj;
+    } catch {
+      if (attempt < retries) {
+        await delay(800 * (attempt + 1));
+        continue;
+      }
+      return null;
+    }
   }
+  return null;
 }
 
 export async function fetchBatch(ids: number[], batchSize = 6): Promise<MetObject[]> {
   const results: MetObject[] = [];
   const batch = ids.slice(0, batchSize);
-  const promises = batch.map((id) => fetchObject(id));
-  const resolved = await Promise.all(promises);
-  for (const obj of resolved) {
-    if (obj) results.push(obj);
+  // Process in small chunks of 4 to avoid rate limits
+  const chunkSize = 4;
+  for (let i = 0; i < batch.length; i += chunkSize) {
+    const chunk = batch.slice(i, i + chunkSize);
+    const resolved = await Promise.all(chunk.map((id) => fetchObject(id)));
+    for (const obj of resolved) {
+      if (obj) results.push(obj);
+    }
+    if (i + chunkSize < batch.length) await delay(200);
   }
   return results;
 }
