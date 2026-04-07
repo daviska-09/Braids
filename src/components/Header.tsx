@@ -21,7 +21,7 @@ const Header = () => {
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
             }
           >
-            gallery
+            collection
           </NavLink>
           <NavLink
             to="/uncovered"
