@@ -173,7 +173,7 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
       if (isDragging.current) {
         const dx = e.clientX - prevMouse.current.x;
         const dy = e.clientY - prevMouse.current.y;
-        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) didDrag.current = true;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDrag.current = true;
         rotation.current.y += dx * 0.005;
         rotation.current.x += dy * 0.005;
         prevMouse.current = { x: e.clientX, y: e.clientY };
