@@ -67,8 +67,7 @@ const Uncovered = () => {
       <div className="max-w-xl mt-2 mb-12">
         <h1 className="font-serif text-3xl md:text-4xl font-normal mb-4">archive explored</h1>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          each dot is a work we've explored, placed where its origin is from. the
-          globe grows denser the more we discover.
+          each dot is a work we've explored, placed where its origin is from. through these threads, we see how civilisation itself is constructed: not only by conquest and industry, but by the tangible and cultural forces that we have woven into our existence. the globe grows denser the more we discover.
         </p>
         {totalIds > 0 && (
           <p className="text-sm">
