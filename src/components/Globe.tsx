@@ -15,6 +15,27 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
   );
 }
 
+function generateThreads(positions: THREE.Vector3[], maxThreads = 150) {
+  const connections: [number, number][] = [];
+  const maxDist = 1.2; // max chord distance between connected dots
+
+  for (let i = 0; i < positions.length; i++) {
+    const neighbors: { idx: number; dist: number }[] = [];
+    for (let j = i + 1; j < positions.length; j++) {
+      const d = positions[i].distanceTo(positions[j]);
+      if (d < maxDist) {
+        neighbors.push({ idx: j, dist: d });
+      }
+    }
+    neighbors.sort((a, b) => a.dist - b.dist);
+    for (const n of neighbors.slice(0, 3)) {
+      connections.push([i, n.idx]);
+      if (connections.length >= maxThreads) return connections;
+    }
+  }
+  return connections;
+}
+
 const Globe = ({ points }: GlobeProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -25,6 +46,8 @@ const Globe = ({ points }: GlobeProps) => {
   const dotPositions = useMemo(() => {
     return points.map((p) => latLngToVector3(p.lat, p.lng, 1));
   }, [points]);
+
+  const threads = useMemo(() => generateThreads(dotPositions), [dotPositions]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -82,8 +105,28 @@ const Globe = ({ points }: GlobeProps) => {
     const dotCloud = new THREE.Points(dotGeo, dotMat);
     scene.add(dotCloud);
 
+    // Thread lines connecting dots
+    const threadMat = new THREE.LineBasicMaterial({
+      color: 0x999999,
+      transparent: true,
+      opacity: 0.15,
+    });
+
+    const threadLines: THREE.Line[] = [];
+    for (const [iA, iB] of threads) {
+      const a = dotPositions[iA];
+      const b = dotPositions[iB];
+      const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+      mid.normalize().multiplyScalar(1.08);
+      const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+      const curvePoints = curve.getPoints(20);
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+      const line = new THREE.Line(lineGeo, threadMat);
+      threadLines.push(line);
+    }
+
     const group = new THREE.Group();
-    group.add(globe, circle, dotCloud);
+    group.add(globe, circle, dotCloud, ...threadLines);
     scene.add(group);
 
     const animate = () => {
@@ -134,7 +177,7 @@ const Globe = ({ points }: GlobeProps) => {
       renderer.dispose();
       container.removeChild(renderer.domElement);
     };
-  }, [dotPositions]);
+  }, [dotPositions, threads]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 };
