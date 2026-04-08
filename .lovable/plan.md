@@ -1,17 +1,34 @@
 
 
-## Plan
+## Plan: Filter Out Paintings/Drawings from the Feed
 
-### 1. Filled bookmark when already saved
-**File: `src/lib/activityStore.ts`**
-- Add `isArtworkSaved(artworkId: number): boolean` helper that checks if any activity with that ID and action `"saved"` exists.
+### Problem
+The search queries (e.g. "silk", "costume") return broad results from the Met API, including paintings and drawings that happen to mention those terms. There's no filtering on the fetched objects.
 
-**File: `src/components/ArtworkModal.tsx`**
-- Import `getActivities` and `isArtworkSaved` from the store.
-- Track `isSaved` state, initialized from `isArtworkSaved(artwork.objectID)`. Set to `true` after `handleSave`.
-- Render `<Bookmark>` with `fill="currentColor"` when saved, unfilled otherwise. Update label to "saved" when already saved.
+### Solution
+Add a filter in `fetchObject()` that rejects objects whose `department` or `classification` indicates a painting, drawing, or similar 2D fine art. This ensures only textiles, garments, and decorative arts appear.
 
-### 2. Remove green dot from curate together nav link
-**File: `src/components/Header.tsx`**
-- Remove the `<span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />` element on line 40 inside the "curate together" NavLink.
+### Changes
+
+**File: `src/lib/metApi.ts`**
+- Add an exclusion list of departments/classifications: `"Paintings"`, `"Drawings and Prints"`, `"Photographs"`, `"European Paintings"`, `"American Paintings and Sculpture"`
+- In `fetchObject()`, after fetching and validating the image, check if `obj.department` or `obj.classification` matches any excluded term (case-insensitive). If so, return `null`.
+- Also clear the cache of any previously cached items that would now be excluded (by clearing `cachedObjectIds` won't help since those are just IDs -- the object-level filter handles it).
+
+```text
+Excluded departments:
+  - Paintings
+  - Drawings and Prints
+  - Photographs
+  - European Paintings
+  - American Paintings and Sculpture
+
+Excluded classifications (partial match):
+  - Painting
+  - Drawing
+  - Print
+  - Photograph
+```
+
+This is a single-file change with ~10 lines added.
 
