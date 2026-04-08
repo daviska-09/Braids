@@ -50,6 +50,7 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
   const didDrag = useRef(false);
   const prevMouse = useRef({ x: 0, y: 0 });
   const rotation = useRef({ x: 0.3, y: 0 });
+  const zoomLevel = useRef(3);
 
   const dotPositions = useMemo(() => {
     return points.map((p) => latLngToVector3(p.lat, p.lng, 1));
@@ -66,7 +67,7 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 3;
+    camera.position.z = zoomLevel.current;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
@@ -224,9 +225,57 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
       }
     };
 
+    // Zoom via mouse wheel
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      zoomLevel.current = Math.max(1.8, Math.min(6, zoomLevel.current + e.deltaY * 0.003));
+      camera.position.z = zoomLevel.current;
+    };
+
+    // Zoom via pinch (touch)
+    let lastTouchDist = 0;
+    const getTouchDist = (e: TouchEvent) => {
+      const [a, b] = [e.touches[0], e.touches[1]];
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        lastTouchDist = getTouchDist(e);
+      } else if (e.touches.length === 1) {
+        isDragging.current = true;
+        didDrag.current = false;
+        prevMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getTouchDist(e);
+        const delta = lastTouchDist - dist;
+        zoomLevel.current = Math.max(1.8, Math.min(6, zoomLevel.current + delta * 0.01));
+        camera.position.z = zoomLevel.current;
+        lastTouchDist = dist;
+      } else if (e.touches.length === 1 && isDragging.current) {
+        const dx = e.touches[0].clientX - prevMouse.current.x;
+        const dy = e.touches[0].clientY - prevMouse.current.y;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDrag.current = true;
+        rotation.current.y += dx * 0.005;
+        rotation.current.x += dy * 0.005;
+        prevMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+    const onTouchEnd = () => {
+      isDragging.current = false;
+      lastTouchDist = 0;
+    };
+
     container.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd);
 
     const onResize = () => {
       const w = container.clientWidth;
@@ -241,6 +290,10 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
       container.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
       container.removeChild(renderer.domElement);
