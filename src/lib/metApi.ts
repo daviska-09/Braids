@@ -40,6 +40,9 @@ export interface MetObject {
   tags: { term: string; AAT_URL: string; Wikidata_URL: string }[] | null;
 }
 
+const EXCLUDED_DEPARTMENTS = ["paintings", "drawings and prints", "photographs", "european paintings", "american paintings and sculpture"];
+const EXCLUDED_CLASSIFICATIONS = ["painting", "drawing", "print", "photograph"];
+
 const objectCache = new Map<number, MetObject>();
 let cachedObjectIds: number[] | null = null;
 
@@ -86,6 +89,9 @@ export async function fetchObject(id: number, retries = 2): Promise<MetObject | 
       if (!res.ok) return null;
       const obj: MetObject = await res.json();
       if (!obj.primaryImageSmall) return null;
+      const dept = (obj.department || "").toLowerCase();
+      const cls = (obj.classification || "").toLowerCase();
+      if (EXCLUDED_DEPARTMENTS.includes(dept) || EXCLUDED_CLASSIFICATIONS.some(ex => cls.includes(ex))) return null;
       objectCache.set(id, obj);
       return obj;
     } catch {
