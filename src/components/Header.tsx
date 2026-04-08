@@ -37,7 +37,6 @@ const Header = () => {
               `flex items-center gap-1.5 ${isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}`
             }
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
             curate together
           </NavLink>
         </nav>

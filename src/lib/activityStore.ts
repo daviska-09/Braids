@@ -32,6 +32,10 @@ export function getActivities(): ActivityEntry[] {
   }
 }
 
+export function isArtworkSaved(artworkId: number): boolean {
+  return getActivities().some((a) => a.artworkId === artworkId && a.action === "saved");
+}
+
 export function onActivityChange(callback: () => void): () => void {
   const handler = () => callback();
   window.addEventListener(EVENT_NAME, handler);
