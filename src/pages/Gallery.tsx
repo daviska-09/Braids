@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchTextileObjectIds, fetchBatch, type MetObject } from "@/lib/metApi";
+import { fetchTextileObjectIds, fetchBatch, fetchObject, type MetObject } from "@/lib/metApi";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import { X } from "lucide-react";
@@ -34,6 +34,16 @@ const Gallery = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<MetObject | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Deep-link: open artwork modal from ?artwork=ID
+  useEffect(() => {
+    const artworkId = searchParams.get("artwork");
+    if (artworkId) {
+      fetchObject(Number(artworkId)).then((obj) => {
+        if (obj) setSelectedArtwork(obj);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     // Reset when origins change
