@@ -32,6 +32,12 @@ export function getActivities(): ActivityEntry[] {
   }
 }
 
+export function removeActivity(id: string) {
+  const activities = getActivities().filter((a) => a.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+  window.dispatchEvent(new Event(EVENT_NAME));
+}
+
 export function isArtworkSaved(artworkId: number): boolean {
   return getActivities().some((a) => a.artworkId === artworkId && a.action === "saved");
 }

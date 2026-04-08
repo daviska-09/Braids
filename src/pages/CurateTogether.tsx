@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getActivities, onActivityChange, type ActivityEntry } from "@/lib/activityStore";
-import { Link2, Mail } from "lucide-react";
+import { getActivities, onActivityChange, removeActivity, type ActivityEntry } from "@/lib/activityStore";
+import { Link2, Mail, X } from "lucide-react";
 
 function timeAgo(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
