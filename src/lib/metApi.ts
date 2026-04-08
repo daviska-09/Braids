@@ -46,8 +46,16 @@ const EXCLUDED_CLASSIFICATIONS = ["painting", "drawing", "print", "photograph"];
 const objectCache = new Map<number, MetObject>();
 let cachedObjectIds: number[] | null = null;
 
+const SESSION_IDS_KEY = "met_textile_ids";
+
 export async function fetchTextileObjectIds(): Promise<number[]> {
   if (cachedObjectIds) return cachedObjectIds;
+
+  const stored = sessionStorage.getItem(SESSION_IDS_KEY);
+  if (stored) {
+    cachedObjectIds = JSON.parse(stored);
+    return cachedObjectIds!;
+  }
 
   const allIds = new Set<number>();
   const promises = TEXTILE_QUERIES.map(async (q) => {
@@ -70,6 +78,7 @@ export async function fetchTextileObjectIds(): Promise<number[]> {
     [ids[i], ids[j]] = [ids[j], ids[i]];
   }
   cachedObjectIds = ids;
+  sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   return ids;
 }
 
@@ -77,11 +86,12 @@ async function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-export async function fetchObject(id: number, retries = 2): Promise<MetObject | null> {
+export async function fetchObject(id: number, retries = 2, signal?: AbortSignal): Promise<MetObject | null> {
   if (objectCache.has(id)) return objectCache.get(id)!;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    if (signal?.aborted) return null;
     try {
-      const res = await fetch(`${BASE}/objects/${id}`);
+      const res = await fetch(`${BASE}/objects/${id}`, { signal });
       if (res.status === 429) {
         await delay(1000 * (attempt + 1));
         continue;
@@ -94,7 +104,8 @@ export async function fetchObject(id: number, retries = 2): Promise<MetObject | 
       if (EXCLUDED_DEPARTMENTS.includes(dept) || EXCLUDED_CLASSIFICATIONS.some(ex => cls.includes(ex))) return null;
       objectCache.set(id, obj);
       return obj;
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return null;
       if (attempt < retries) {
         await delay(800 * (attempt + 1));
         continue;
@@ -105,18 +116,18 @@ export async function fetchObject(id: number, retries = 2): Promise<MetObject | 
   return null;
 }
 
-export async function fetchBatch(ids: number[], batchSize = 6): Promise<MetObject[]> {
+export async function fetchBatch(ids: number[], batchSize = 6, signal?: AbortSignal): Promise<MetObject[]> {
   const results: MetObject[] = [];
   const batch = ids.slice(0, batchSize);
-  // Process in small chunks of 4 to avoid rate limits
-  const chunkSize = 4;
+  const chunkSize = 6;
   for (let i = 0; i < batch.length; i += chunkSize) {
+    if (signal?.aborted) break;
     const chunk = batch.slice(i, i + chunkSize);
-    const resolved = await Promise.all(chunk.map((id) => fetchObject(id)));
+    const resolved = await Promise.all(chunk.map((id) => fetchObject(id, 2, signal)));
     for (const obj of resolved) {
       if (obj) results.push(obj);
     }
-    if (i + chunkSize < batch.length) await delay(200);
+    if (i + chunkSize < batch.length) await delay(100);
   }
   return results;
 }

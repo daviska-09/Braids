@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MetObject } from "@/lib/metApi";
 import { addActivity, isArtworkSaved } from "@/lib/activityStore";
@@ -14,21 +14,30 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
   const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.objectID) : false);
+  const [imgSrc, setImgSrc] = useState(artwork?.primaryImageSmall ?? "");
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!artwork) return;
+    setImgSrc(artwork.primaryImageSmall);
+    setImgLoaded(false);
+    if (!artwork.primaryImage) return;
+    const img = new Image();
+    img.src = artwork.primaryImage;
+    img.onload = () => setImgSrc(artwork.primaryImage);
+  }, [artwork?.objectID]);
 
   if (!artwork) return null;
 
   const shareUrl = `${window.location.origin}/?artwork=${artwork.objectID}`;
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    addActivity({
-      artworkId: artwork.objectID,
-      artworkTitle: artwork.title,
-      artworkArtist: artwork.artistDisplayName,
-      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
-      action: "saved",
-    });
-    toast("Link copied to clipboard");
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast("Link copied to clipboard");
+    } catch {
+      toast("Couldn't copy — try copying the URL from the address bar");
+    }
   };
 
   const handleSave = () => {
@@ -86,11 +95,15 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
             <X size={20} />
           </button>
           <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/2 bg-muted flex items-center justify-center p-6">
+            <div className="md:w-1/2 bg-muted flex items-center justify-center p-6 relative min-h-[200px]">
+              {!imgLoaded && (
+                <div className="absolute inset-0 bg-muted animate-pulse" />
+              )}
               <img
-                src={artwork.primaryImage || artwork.primaryImageSmall}
+                src={imgSrc}
                 alt={artwork.title}
-                className="max-h-[60vh] object-contain"
+                onLoad={() => setImgLoaded(true)}
+                className={`max-h-[60vh] object-contain relative transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               />
             </div>
             <div className="md:w-1/2 p-8 flex flex-col justify-center">

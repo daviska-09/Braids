@@ -11,6 +11,7 @@ export interface ActivityEntry {
 
 const STORAGE_KEY = "curate-activity";
 const EVENT_NAME = "activity-update";
+const MAX_ACTIVITIES = 100;
 
 export function addActivity(entry: Omit<ActivityEntry, "id" | "timestamp">) {
   const activities = getActivities();
@@ -20,7 +21,12 @@ export function addActivity(entry: Omit<ActivityEntry, "id" | "timestamp">) {
     timestamp: Date.now(),
   };
   activities.unshift(newEntry);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+  if (activities.length > MAX_ACTIVITIES) activities.length = MAX_ACTIVITIES;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+  } catch {
+    // localStorage quota exceeded — activity won't persist this session
+  }
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 
@@ -44,11 +50,13 @@ export function isArtworkSaved(artworkId: number): boolean {
 
 export function onActivityChange(callback: () => void): () => void {
   const handler = () => callback();
-  window.addEventListener(EVENT_NAME, handler);
-  window.addEventListener("storage", (e) => {
+  const storageHandler = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) callback();
-  });
+  };
+  window.addEventListener(EVENT_NAME, handler);
+  window.addEventListener("storage", storageHandler);
   return () => {
     window.removeEventListener(EVENT_NAME, handler);
+    window.removeEventListener("storage", storageHandler);
   };
 }

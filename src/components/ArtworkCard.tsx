@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import type { MetObject } from "@/lib/metApi";
 
@@ -11,6 +11,7 @@ interface ArtworkCardProps {
 const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
   const [loaded, setLoaded] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const placeholderPadding = useRef(`${100 + Math.random() * 60}%`);
 
   return (
     <motion.div
@@ -24,7 +25,7 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
     >
       <div className="relative overflow-hidden">
         {!loaded && (
-          <div className="w-full bg-muted animate-pulse" style={{ paddingBottom: `${100 + Math.random() * 60}%` }} />
+          <div className="w-full bg-muted animate-pulse" style={{ paddingBottom: placeholderPadding.current }} />
         )}
         <img
           src={artwork.primaryImageSmall}

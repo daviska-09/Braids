@@ -34,6 +34,8 @@ const Gallery = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<MetObject | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Deep-link: open artwork modal from ?artwork=ID
   useEffect(() => {
@@ -46,32 +48,43 @@ const Gallery = () => {
   }, []);
 
   useEffect(() => {
-    // Reset when origins change
+    // Cancel any in-flight batch when origins change
+    abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
     setLoading(true);
+    loadingRef.current = false;
     fetchTextileObjectIds().then((ids) => {
       setAllIds(ids);
       loadBatch(ids, 0);
     });
+    return () => { abortRef.current?.abort(); };
   }, [originsParam]);
 
   const loadBatch = async (ids: number[], start: number) => {
     if (start >= ids.length) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    loadingRef.current = true;
     setLoadingMore(true);
-    const slice = ids.slice(start, start + BATCH_SIZE * 3);
-    const results = await fetchBatch(slice, BATCH_SIZE * 3);
-    const valid = results.slice(0, BATCH_SIZE);
-    setArtworks((prev) => [...prev, ...valid]);
-    setCursor(start + BATCH_SIZE * 3);
+    const slice = ids.slice(start, start + BATCH_SIZE * 2);
+    const results = await fetchBatch(slice, BATCH_SIZE * 2, controller.signal);
+    if (controller.signal.aborted) {
+      loadingRef.current = false;
+      return;
+    }
+    setArtworks((prev) => [...prev, ...results]);
+    setCursor(start + BATCH_SIZE * 2);
     setLoading(false);
     setLoadingMore(false);
+    loadingRef.current = false;
   };
 
   const loadMore = useCallback(() => {
-    if (loadingMore || cursor >= allIds.length) return;
+    if (loadingRef.current || cursor >= allIds.length) return;
     loadBatch(allIds, cursor);
-  }, [allIds, cursor, loadingMore]);
+  }, [allIds, cursor]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
