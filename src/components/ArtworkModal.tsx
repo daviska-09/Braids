@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MetObject } from "@/lib/metApi";
-import { addActivity } from "@/lib/activityStore";
+import { addActivity, isArtworkSaved } from "@/lib/activityStore";
 import { X, Link2, Mail, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ interface ArtworkModalProps {
 const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
+  const [isSaved, setIsSaved] = useState(() => isArtworkSaved(artwork.objectID));
 
   if (!artwork) return null;
 
@@ -38,6 +39,7 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
       artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
       action: "saved",
     });
+    setIsSaved(true);
     toast("Saved to collection");
   };
 
@@ -113,9 +115,9 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
               <div className="mt-6 flex items-center gap-4 flex-wrap">
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className={`flex items-center gap-1.5 text-xs transition-colors ${isSaved ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Bookmark className="w-3.5 h-3.5" /> save to collection
+                  <Bookmark className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} /> {isSaved ? "saved" : "save to collection"}
                 </button>
                 <button
                   onClick={handleCopyLink}
