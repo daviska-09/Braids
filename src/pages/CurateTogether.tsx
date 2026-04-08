@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getActivities, onActivityChange, type ActivityEntry } from "@/lib/activityStore";
-import { Link2, Mail } from "lucide-react";
+import { getActivities, onActivityChange, removeActivity, type ActivityEntry } from "@/lib/activityStore";
+import { Link2, Mail, X } from "lucide-react";
 
 function timeAgo(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
@@ -45,7 +45,7 @@ const CurateTogether = () => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
                 onClick={() => navigate(`/?artwork=${a.artworkId}`)}
-                className="w-full flex items-center gap-4 py-3 px-3 rounded hover:bg-muted/50 transition-colors text-left"
+                className="w-full flex items-center gap-4 py-3 px-3 rounded hover:bg-muted/50 transition-colors text-left group"
               >
                 {a.artworkImage ? (
                   <img
@@ -67,6 +67,13 @@ const CurateTogether = () => {
                     <span className="ml-auto text-foreground/30">{timeAgo(a.timestamp)}</span>
                   </p>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeActivity(a.id); }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground flex-shrink-0"
+                  aria-label="Remove from feed"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </motion.button>
             ))}
           </AnimatePresence>
