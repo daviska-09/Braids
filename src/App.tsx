@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/Header";
 import Gallery from "@/pages/Gallery";
 import Uncovered from "@/pages/Uncovered";
+import CurateTogether from "@/pages/CurateTogether";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Gallery />} />
           <Route path="/uncovered" element={<Uncovered />} />
+          <Route path="/curate" element={<CurateTogether />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
