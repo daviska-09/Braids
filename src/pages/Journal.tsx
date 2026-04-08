@@ -48,11 +48,6 @@ const Journal = () => {
         Katelyn's threads and curations.
       </p>
 
-      {posts.length === 0 && !showForm && (
-        <p className="text-center py-20 text-muted-foreground text-sm">
-          {admin ? "" : ""}
-        </p>
-      )}
 
       <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
         {posts.map((post) => (
