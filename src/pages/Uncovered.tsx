@@ -72,11 +72,12 @@ const Uncovered = () => {
     <div className="px-6 md:px-10 pb-20">
       <div className="max-w-xl mt-2 mb-12">
         <h1 className="font-serif text-3xl md:text-4xl font-normal mb-4">archive explored</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          each dot is a work we've explored, placed where its origin is from. through these threads, we see how civilisation itself is constructed: not only by conquest and industry, but by the tangible and cultural forces that we have woven into our existence. the globe grows denser the more we discover.
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
+          each dot is a work we've explored, placed where its origin is from. through these threads, we see how civilisation itself is constructed: not only by conquest and industry, but by the tangible and cultural forces that we have woven into our existence.{"\n\n\n"}
+          the globe grows denser the more we discover.
         </p>
         <p className="text-xs text-muted-foreground/70 mb-4">
-          click a thread to explore works from connected origins
+          click a thread to explore items from connected origins
         </p>
         {totalIds > 0 && (
           <p className="text-sm">
