@@ -13,7 +13,7 @@ interface ArtworkModalProps {
 const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
-  const [isSaved, setIsSaved] = useState(() => isArtworkSaved(artwork.objectID));
+  const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.objectID) : false);
 
   if (!artwork) return null;
 
