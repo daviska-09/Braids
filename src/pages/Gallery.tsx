@@ -114,7 +114,7 @@ const Gallery = () => {
 
       {!origins.length && (
         <p className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-10 max-w-xl">
-          Every stitch tells a story.
+          every stitch tells a story.
         </p>
       )}
 
