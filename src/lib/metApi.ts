@@ -89,6 +89,9 @@ export async function fetchObject(id: number, retries = 2): Promise<MetObject | 
       if (!res.ok) return null;
       const obj: MetObject = await res.json();
       if (!obj.primaryImageSmall) return null;
+      const dept = (obj.department || "").toLowerCase();
+      const cls = (obj.classification || "").toLowerCase();
+      if (EXCLUDED_DEPARTMENTS.includes(dept) || EXCLUDED_CLASSIFICATIONS.some(ex => cls.includes(ex))) return null;
       objectCache.set(id, obj);
       return obj;
     } catch {
