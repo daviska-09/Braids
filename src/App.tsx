@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Gallery from "@/pages/Gallery";
 import Uncovered from "@/pages/Uncovered";
 import CurateTogether from "@/pages/CurateTogether";
+import Journal from "@/pages/Journal";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Gallery />} />
           <Route path="/uncovered" element={<Uncovered />} />
           <Route path="/curate" element={<CurateTogether />} />
+          <Route path="/journal" element={<Journal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
