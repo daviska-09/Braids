@@ -24,7 +24,7 @@ const CurateTogether = () => {
   return (
     <div className="px-6 md:px-10 pb-20">
       <p className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-10 max-w-xl">
-        A shared log of saved and sent works.
+        A shared log of saved and sent items
       </p>
 
       {activities.length === 0 ? (
