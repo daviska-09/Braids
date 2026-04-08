@@ -50,6 +50,7 @@ const Globe = ({ points, onThreadClick }: GlobeProps) => {
   const didDrag = useRef(false);
   const prevMouse = useRef({ x: 0, y: 0 });
   const rotation = useRef({ x: 0.3, y: 0 });
+  const zoomLevel = useRef(3);
 
   const dotPositions = useMemo(() => {
     return points.map((p) => latLngToVector3(p.lat, p.lng, 1));
