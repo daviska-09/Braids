@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MetObject } from "@/lib/metApi";
-import { X } from "lucide-react";
+import { addActivity } from "@/lib/activityStore";
+import { X, Link2, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 interface ArtworkModalProps {
   artwork: MetObject | null;
@@ -8,7 +11,44 @@ interface ArtworkModalProps {
 }
 
 const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
+  const [showPostcard, setShowPostcard] = useState(false);
+  const [email, setEmail] = useState("");
+
   if (!artwork) return null;
+
+  const shareUrl = `${window.location.origin}/?artwork=${artwork.objectID}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    addActivity({
+      artworkId: artwork.objectID,
+      artworkTitle: artwork.title,
+      artworkArtist: artwork.artistDisplayName,
+      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
+      action: "saved",
+    });
+    toast("Link copied to clipboard");
+  };
+
+  const handleSendPostcard = () => {
+    if (!email) return;
+    const subject = encodeURIComponent(`A postcard for you: ${artwork.title}`);
+    const body = encodeURIComponent(
+      `I wanted to share this artwork with you:\n\n"${artwork.title}"${artwork.artistDisplayName ? ` by ${artwork.artistDisplayName}` : ""}${artwork.objectDate ? `, ${artwork.objectDate}` : ""}\n\nView it here: ${shareUrl}`
+    );
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, "_self");
+    addActivity({
+      artworkId: artwork.objectID,
+      artworkTitle: artwork.title,
+      artworkArtist: artwork.artistDisplayName,
+      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
+      action: "sent",
+      recipientHint: email.split("@")[0],
+    });
+    toast("Postcard ready to send");
+    setEmail("");
+    setShowPostcard(false);
+  };
 
   return (
     <AnimatePresence>
@@ -57,12 +97,48 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
                 {artwork.department && <Detail label="Department" value={artwork.department} />}
                 {artwork.creditLine && <Detail label="Credit" value={artwork.creditLine} />}
               </div>
+
+              {/* Share actions */}
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Link2 className="w-3.5 h-3.5" /> copy link
+                </button>
+                <button
+                  onClick={() => setShowPostcard((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" /> send as postcard
+                </button>
+              </div>
+
+              {showPostcard && (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="recipient@email.com"
+                    className="flex-1 text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                    onKeyDown={(e) => e.key === "Enter" && handleSendPostcard()}
+                  />
+                  <button
+                    onClick={handleSendPostcard}
+                    className="text-xs px-3 py-1.5 bg-accent text-accent-foreground rounded hover:opacity-90 transition-opacity"
+                  >
+                    send
+                  </button>
+                </div>
+              )}
+
               {artwork.objectURL && (
                 <a
                   href={artwork.objectURL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 text-xs text-accent hover:underline"
+                  className="mt-4 text-xs text-accent hover:underline"
                 >
                   View on metmuseum.org →
                 </a>
