@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MetObject } from "@/lib/metApi";
 import { addActivity } from "@/lib/activityStore";
-import { X, Link2, Mail } from "lucide-react";
+import { X, Link2, Mail, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
 interface ArtworkModalProps {
@@ -28,6 +28,17 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
       action: "saved",
     });
     toast("Link copied to clipboard");
+  };
+
+  const handleSave = () => {
+    addActivity({
+      artworkId: artwork.objectID,
+      artworkTitle: artwork.title,
+      artworkArtist: artwork.artistDisplayName,
+      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
+      action: "saved",
+    });
+    toast("Saved to collection");
   };
 
   const handleSendPostcard = () => {
@@ -99,7 +110,13 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
               </div>
 
               {/* Share actions */}
-              <div className="mt-6 flex items-center gap-3">
+              <div className="mt-6 flex items-center gap-4 flex-wrap">
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Bookmark className="w-3.5 h-3.5" /> save to collection
+                </button>
                 <button
                   onClick={handleCopyLink}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
