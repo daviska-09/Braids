@@ -50,7 +50,7 @@ const Journal = () => {
 
       {posts.length === 0 && !showForm && (
         <p className="text-center py-20 text-muted-foreground text-sm">
-          {admin ? "no posts yet — click + to write your first." : "nothing here yet."}
+          {admin ? "" : ""}
         </p>
       )}
 
