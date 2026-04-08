@@ -38,14 +38,14 @@ const Journal = () => {
   const showForm = creating || editing !== null;
 
   return (
-    <div className="px-6 md:px-10 pb-20">
+    <div className="px-6 md:px-10 pb-20 opacity-100">
       <p
         className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-10 max-w-xl select-none"
         onClick={(e) => {
           if (e.detail === 3) handleTripleClick();
         }}
       >
-        thoughts, threads, reflections.
+        Katelyn's threads and curations.
       </p>
 
       {posts.length === 0 && !showForm && (
