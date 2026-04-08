@@ -40,6 +40,9 @@ export interface MetObject {
   tags: { term: string; AAT_URL: string; Wikidata_URL: string }[] | null;
 }
 
+const EXCLUDED_DEPARTMENTS = ["paintings", "drawings and prints", "photographs", "european paintings", "american paintings and sculpture"];
+const EXCLUDED_CLASSIFICATIONS = ["painting", "drawing", "print", "photograph"];
+
 const objectCache = new Map<number, MetObject>();
 let cachedObjectIds: number[] | null = null;
 
