@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchTextileObjectIds, fetchBatch, fetchObject, type MetObject } from "@/lib/metApi";
+import { fetchTextileObjectIds, fetchObject, type MetObject } from "@/lib/metApi";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import { X } from "lucide-react";
 
-const BATCH_SIZE = 12;
+const BATCH_SIZE = 11;
 
 function matchesOrigins(art: MetObject, origins: string[]): boolean {
   const fields = [
@@ -31,7 +31,7 @@ const Gallery = () => {
   const [artworks, setArtworks] = useState<MetObject[]>([]);
   const [cursor, setCursor] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [pendingSkeletons, setPendingSkeletons] = useState(BATCH_SIZE);
   const [selectedArtwork, setSelectedArtwork] = useState<MetObject | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
@@ -54,6 +54,7 @@ const Gallery = () => {
     setCursor(0);
     setLoading(true);
     loadingRef.current = false;
+    setPendingSkeletons(BATCH_SIZE);
     fetchTextileObjectIds().then((ids) => {
       setAllIds(ids);
       loadBatch(ids, 0);
@@ -67,18 +68,24 @@ const Gallery = () => {
     const controller = new AbortController();
     abortRef.current = controller;
     loadingRef.current = true;
-    setLoadingMore(true);
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
-    const results = await fetchBatch(slice, BATCH_SIZE * 2, controller.signal);
-    if (controller.signal.aborted) {
+    setPendingSkeletons(BATCH_SIZE);
+    await Promise.all(
+      slice.map(id =>
+        fetchObject(id, 2, controller.signal).then(obj => {
+          if (obj && !controller.signal.aborted) {
+            setArtworks(prev => [...prev, obj]);
+            setPendingSkeletons(prev => Math.max(0, prev - 1));
+          }
+        })
+      )
+    );
+    if (!controller.signal.aborted) {
+      setCursor(start + slice.length);
+      setLoading(false);
+      setPendingSkeletons(0);
       loadingRef.current = false;
-      return;
     }
-    setArtworks((prev) => [...prev, ...results]);
-    setCursor(start + BATCH_SIZE * 2);
-    setLoading(false);
-    setLoadingMore(false);
-    loadingRef.current = false;
   };
 
   const loadMore = useCallback(() => {
@@ -131,17 +138,7 @@ const Gallery = () => {
         </p>
       )}
 
-      {loading ? (
-        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="mb-4 break-inside-avoid bg-muted animate-pulse"
-              style={{ height: `${200 + Math.random() * 200}px` }}
-            />
-          ))}
-        </div>
-      ) : filteredArtworks.length === 0 ? (
+      {filteredArtworks.length === 0 && pendingSkeletons === 0 && !loading ? (
         <div className="text-center py-20 text-muted-foreground">
           <p className="text-sm">no works found matching these origins yet.</p>
           <button onClick={clearFilter} className="mt-2 text-xs underline hover:text-foreground transition-colors">
@@ -158,12 +155,13 @@ const Gallery = () => {
               onClick={() => setSelectedArtwork(art)}
             />
           ))}
-        </div>
-      )}
-
-      {loadingMore && (
-        <div className="flex justify-center py-10">
-          <div className="w-4 h-4 border border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+          {pendingSkeletons > 0 && Array.from({ length: pendingSkeletons }).map((_, i) => (
+            <div
+              key={`sk-${i}`}
+              className="mb-4 break-inside-avoid bg-muted animate-pulse rounded"
+              style={{ height: `${180 + (i * 53 % 180)}px` }}
+            />
+          ))}
         </div>
       )}
 

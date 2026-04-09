@@ -1,9 +1,5 @@
 const BASE = "https://collectionapi.metmuseum.org/public/collection/v1";
 
-const TEXTILE_QUERIES = [
-  "textile", "embroidery", "silk", "weaving", "lace", "garment",
-  "dress", "costume", "tapestry", "quilt", "braid", "knitting",
-];
 
 export interface MetObject {
   objectID: number;
@@ -57,26 +53,15 @@ export async function fetchTextileObjectIds(): Promise<number[]> {
     return cachedObjectIds!;
   }
 
-  const allIds = new Set<number>();
-  const promises = TEXTILE_QUERIES.map(async (q) => {
-    try {
-      const res = await fetch(`${BASE}/search?hasImages=true&q=${q}`);
-      const data = await res.json();
-      if (data.objectIDs) {
-        data.objectIDs.forEach((id: number) => allIds.add(id));
-      }
-    } catch {
-      // skip failed queries
-    }
-  });
-  await Promise.all(promises);
+  const res = await fetch('/textile-ids.json');
+  const ids: number[] = await res.json();
 
-  const ids = Array.from(allIds);
-  // Shuffle for variety
+  // Shuffle for variety on each page load
   for (let i = ids.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [ids[i], ids[j]] = [ids[j], ids[i]];
   }
+
   cachedObjectIds = ids;
   sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   return ids;
@@ -98,7 +83,7 @@ export async function fetchObject(id: number, retries = 2, signal?: AbortSignal)
       }
       if (!res.ok) return null;
       const obj: MetObject = await res.json();
-      if (!obj.primaryImageSmall) return null;
+      if (!obj.primaryImageSmall || !obj.primaryImage) return null;
       const dept = (obj.department || "").toLowerCase();
       const cls = (obj.classification || "").toLowerCase();
       if (EXCLUDED_DEPARTMENTS.includes(dept) || EXCLUDED_CLASSIFICATIONS.some(ex => cls.includes(ex))) return null;
@@ -116,18 +101,7 @@ export async function fetchObject(id: number, retries = 2, signal?: AbortSignal)
   return null;
 }
 
-export async function fetchBatch(ids: number[], batchSize = 6, signal?: AbortSignal): Promise<MetObject[]> {
-  const results: MetObject[] = [];
-  const batch = ids.slice(0, batchSize);
-  const chunkSize = 6;
-  for (let i = 0; i < batch.length; i += chunkSize) {
-    if (signal?.aborted) break;
-    const chunk = batch.slice(i, i + chunkSize);
-    const resolved = await Promise.all(chunk.map((id) => fetchObject(id, 2, signal)));
-    for (const obj of resolved) {
-      if (obj) results.push(obj);
-    }
-    if (i + chunkSize < batch.length) await delay(100);
-  }
-  return results;
+export async function fetchBatch(ids: number[], signal?: AbortSignal): Promise<MetObject[]> {
+  const settled = await Promise.all(ids.map(id => fetchObject(id, 2, signal)));
+  return settled.filter((obj): obj is MetObject => obj !== null);
 }

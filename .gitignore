@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Large local data files
+MetObjects.csv
+textiles.json
+
+# One-time build scripts
+filterTextiles.js
+analyzeTextiles.js
+generateIdPool.js
+
+# Claude Code
+.claude/
