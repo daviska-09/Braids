@@ -1,8 +1,11 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
+import { feature } from "topojson-client";
+import type { Topology } from "topojson-specification";
 import type { GlobePoint } from "./Globe";
 
 interface FlatMapProps {
   points: GlobePoint[];
+  validLabels?: Set<string>;
   onLocationClick?: (label: string) => void;
   selectedLabel?: string | null;
 }
@@ -17,6 +20,30 @@ function project(lat: number, lng: number) {
     x: ((lng + 180) / 360) * W,
     y: ((90 - lat) / 180) * H,
   };
+}
+
+function ringToD(ring: number[][]): string {
+  if (ring.length === 0) return "";
+  return (
+    ring
+      .map(([lng, lat], i) => {
+        const x = (((lng + 180) / 360) * W).toFixed(2);
+        const y = (((90 - lat) / 180) * H).toFixed(2);
+        return `${i === 0 ? "M" : "L"}${x},${y}`;
+      })
+      .join("") + "Z"
+  );
+}
+
+function geometryToD(geometry: GeoJSON.Geometry | null): string {
+  if (!geometry) return "";
+  if (geometry.type === "Polygon") {
+    return geometry.coordinates.map(ringToD).join(" ");
+  }
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates.flatMap((p) => p.map(ringToD)).join(" ");
+  }
+  return "";
 }
 
 function generateConnections(pts: { x: number; y: number }[], maxThreads = 150) {
@@ -39,7 +66,46 @@ function generateConnections(pts: { x: number; y: number }[], maxThreads = 150) 
   return connections;
 }
 
-const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
+// World outlines — loaded once, shared across renders
+let worldFeaturesCache: GeoJSON.Feature[] | null = null;
+
+const WorldOutlines = () => {
+  const [features, setFeatures] = useState<GeoJSON.Feature[]>(worldFeaturesCache ?? []);
+
+  useEffect(() => {
+    if (worldFeaturesCache) { setFeatures(worldFeaturesCache); return; }
+    fetch("/world-110m.json")
+      .then((r) => r.json())
+      .then((topo: Topology) => {
+        const geo = feature(topo, topo.objects.countries as any);
+        worldFeaturesCache = (geo as any).features;
+        setFeatures(worldFeaturesCache!);
+      })
+      .catch(() => {/* outlines unavailable — silent */});
+  }, []);
+
+  return (
+    <>
+      {features.map((f, i) => {
+        const d = geometryToD(f.geometry as GeoJSON.Geometry);
+        if (!d) return null;
+        return (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={0.4}
+            strokeOpacity={0.2}
+            className="pointer-events-none text-foreground"
+          />
+        );
+      })}
+    </>
+  );
+};
+
+const FlatMap = ({ points, validLabels, onLocationClick, selectedLabel }: FlatMapProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [xform, setXform] = useState({ scale: 1, tx: 0, ty: 0 });
   const isPanning = useRef(false);
@@ -65,11 +131,7 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
       setXform((prev) => {
         const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, prev.scale * factor));
         const ratio = newScale / prev.scale;
-        return {
-          scale: newScale,
-          tx: mx + (prev.tx - mx) * ratio,
-          ty: my + (prev.ty - my) * ratio,
-        };
+        return { scale: newScale, tx: mx + (prev.tx - mx) * ratio, ty: my + (prev.ty - my) * ratio };
       });
     },
     [getSvgPoint]
@@ -85,7 +147,6 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
     }));
   }, []);
 
-  // Wheel and touch events need passive:false so must be added imperatively
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -94,7 +155,6 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
       e.preventDefault();
       applyZoom(e.clientX, e.clientY, 1 - e.deltaY * 0.001);
     };
-
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         const [a, b] = [e.touches[0], e.touches[1]];
@@ -105,7 +165,6 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
         lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     };
-
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
@@ -124,11 +183,7 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
         lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     };
-
-    const onTouchEnd = () => {
-      isPanning.current = false;
-      lastPinchDist.current = 0;
-    };
+    const onTouchEnd = () => { isPanning.current = false; lastPinchDist.current = 0; };
 
     svg.addEventListener("wheel", onWheel, { passive: false });
     svg.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -147,7 +202,6 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
     didPan.current = false;
     lastPos.current = { x: e.clientX, y: e.clientY };
   };
-
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isPanning.current) return;
     const dx = e.clientX - lastPos.current.x;
@@ -156,17 +210,15 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
     applyPan(dx, dy);
     lastPos.current = { x: e.clientX, y: e.clientY };
   };
+  const handleMouseUp = () => { isPanning.current = false; };
 
-  const handleMouseUp = () => {
-    isPanning.current = false;
-    // didPan intentionally NOT reset here — click handlers read it before next mousedown resets it
-  };
-
-  // Element clicks only fire if the interaction was not a pan
   const handleElementClick = (label: string) => (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!didPan.current) onLocationClick?.(label);
   };
+
+  const isClickable = (label: string) =>
+    !validLabels || validLabels.has(label);
 
   const { scale, tx, ty } = xform;
 
@@ -181,6 +233,9 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
       onMouseLeave={handleMouseUp}
     >
       <g transform={`translate(${tx}, ${ty}) scale(${scale})`}>
+        {/* Country outlines — rendered first so they sit behind everything */}
+        <WorldOutlines />
+
         {/* Thread lines */}
         {connections.map(([iA, iB], i) => {
           const a = projected[iA];
@@ -189,36 +244,34 @@ const FlatMap = ({ points, onLocationClick, selectedLabel }: FlatMapProps) => {
           const labelB = points[iB]?.label;
           const isSelected =
             !!selectedLabel && (labelA === selectedLabel || labelB === selectedLabel);
+          const clickable = isClickable(labelA || "") || isClickable(labelB || "");
           return (
             <line
               key={`t-${i}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
+              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
               stroke={isSelected ? "#222" : "#999"}
               strokeOpacity={isSelected ? 0.5 : 0.15}
               strokeWidth={isSelected ? 0.8 : 0.5}
-              className="cursor-pointer"
-              onClick={handleElementClick(labelA || labelB || "")}
+              className={clickable ? "cursor-pointer" : "pointer-events-none"}
+              onClick={clickable ? handleElementClick(labelA || labelB || "") : undefined}
             />
           );
         })}
 
         {/* Dots */}
         {projected.map((p, i) => {
-          const label = points[i]?.label;
+          const label = points[i]?.label ?? "";
           const isSelected = !!selectedLabel && label === selectedLabel;
+          const clickable = isClickable(label);
           return (
             <circle
               key={`d-${i}`}
-              cx={p.x}
-              cy={p.y}
+              cx={p.x} cy={p.y}
               r={isSelected ? 2.5 : 1.5}
-              fill={isSelected ? "#111" : "#333"}
-              opacity={isSelected ? 1 : 0.7}
-              className="cursor-pointer"
-              onClick={handleElementClick(label || "")}
+              fill={isSelected ? "#111" : clickable ? "#333" : "#aaa"}
+              opacity={isSelected ? 1 : clickable ? 0.7 : 0.35}
+              className={clickable ? "cursor-pointer" : "pointer-events-none"}
+              onClick={clickable ? handleElementClick(label) : undefined}
             />
           );
         })}

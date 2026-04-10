@@ -1,0 +1,374 @@
+[
+  {
+    "label": "American",
+    "count": 13942,
+    "lat": 38,
+    "lng": -97
+  },
+  {
+    "label": "French",
+    "count": 13349,
+    "lat": 46,
+    "lng": 2
+  },
+  {
+    "label": "China",
+    "count": 10959,
+    "lat": 35,
+    "lng": 105
+  },
+  {
+    "label": "Japan",
+    "count": 10436,
+    "lat": 36,
+    "lng": 138
+  },
+  {
+    "label": "Italian",
+    "count": 4649,
+    "lat": 42,
+    "lng": 12
+  },
+  {
+    "label": "British",
+    "count": 2920,
+    "lat": 52,
+    "lng": -1
+  },
+  {
+    "label": "Coptic",
+    "count": 1662,
+    "lat": 27,
+    "lng": 30
+  },
+  {
+    "label": "German",
+    "count": 1522,
+    "lat": 51,
+    "lng": 10
+  },
+  {
+    "label": "Spanish",
+    "count": 949,
+    "lat": 40,
+    "lng": -4
+  },
+  {
+    "label": "Frankish",
+    "count": 737,
+    "lat": 48,
+    "lng": 5
+  },
+  {
+    "label": "Indonesia (Java)",
+    "count": 697,
+    "lat": -7,
+    "lng": 110
+  },
+  {
+    "label": "Moche",
+    "count": 666,
+    "lat": -8,
+    "lng": -79
+  },
+  {
+    "label": "Asmat people",
+    "count": 618,
+    "lat": -5,
+    "lng": 138
+  },
+  {
+    "label": "Korea",
+    "count": 521,
+    "lat": 37,
+    "lng": 128
+  },
+  {
+    "label": "Japanese",
+    "count": 503,
+    "lat": 36,
+    "lng": 138
+  },
+  {
+    "label": "Mexican",
+    "count": 497,
+    "lat": 23,
+    "lng": -102
+  },
+  {
+    "label": "Italian, Venice",
+    "count": 485,
+    "lat": 45,
+    "lng": 12
+  },
+  {
+    "label": "Byzantine",
+    "count": 476,
+    "lat": 41,
+    "lng": 29
+  },
+  {
+    "label": "Flemish",
+    "count": 416,
+    "lat": 51,
+    "lng": 4
+  },
+  {
+    "label": "Paracas",
+    "count": 396,
+    "lat": -14,
+    "lng": -76
+  },
+  {
+    "label": "Russian",
+    "count": 395,
+    "lat": 56,
+    "lng": 37
+  },
+  {
+    "label": "Thailand",
+    "count": 372,
+    "lat": 15,
+    "lng": 101
+  },
+  {
+    "label": "India",
+    "count": 371,
+    "lat": 20,
+    "lng": 77
+  },
+  {
+    "label": "South Netherlandish",
+    "count": 347,
+    "lat": 51,
+    "lng": 4
+  },
+  {
+    "label": "Belgian",
+    "count": 298,
+    "lat": 51,
+    "lng": 4
+  },
+  {
+    "label": "Austrian",
+    "count": 287,
+    "lat": 47,
+    "lng": 14
+  },
+  {
+    "label": "Irish",
+    "count": 284,
+    "lat": 53,
+    "lng": -8
+  },
+  {
+    "label": "Peruvian",
+    "count": 282,
+    "lat": -9,
+    "lng": -75
+  },
+  {
+    "label": "Dutch",
+    "count": 231,
+    "lat": 52,
+    "lng": 5
+  },
+  {
+    "label": "Roman",
+    "count": 226,
+    "lat": 42,
+    "lng": 12
+  },
+  {
+    "label": "Chimú",
+    "count": 217,
+    "lat": -8,
+    "lng": -79
+  },
+  {
+    "label": "Vicús",
+    "count": 209,
+    "lat": -4,
+    "lng": -80
+  },
+  {
+    "label": "Catalan",
+    "count": 206,
+    "lat": 41,
+    "lng": 2
+  },
+  {
+    "label": "Tibet",
+    "count": 196,
+    "lat": 31,
+    "lng": 90
+  },
+  {
+    "label": "Inuit",
+    "count": 196,
+    "lat": 64,
+    "lng": -110
+  },
+  {
+    "label": "Nasca",
+    "count": 184,
+    "lat": -14,
+    "lng": -76
+  },
+  {
+    "label": "Indonesia",
+    "count": 176,
+    "lat": -7,
+    "lng": 110
+  },
+  {
+    "label": "Inca",
+    "count": 163,
+    "lat": -13,
+    "lng": -72
+  },
+  {
+    "label": "Edo peoples",
+    "count": 163,
+    "lat": 6,
+    "lng": 5
+  },
+  {
+    "label": "Yoruba peoples",
+    "count": 158,
+    "lat": 7,
+    "lng": 5
+  },
+  {
+    "label": "Italian, Genoa",
+    "count": 154,
+    "lat": 44,
+    "lng": 9
+  },
+  {
+    "label": "Italian or Spanish",
+    "count": 146,
+    "lat": 42,
+    "lng": 5
+  },
+  {
+    "label": "Chinese",
+    "count": 143,
+    "lat": 35,
+    "lng": 105
+  },
+  {
+    "label": "Aymara",
+    "count": 138,
+    "lat": -16,
+    "lng": -68
+  },
+  {
+    "label": "Dogon peoples",
+    "count": 134,
+    "lat": 14,
+    "lng": -3
+  },
+  {
+    "label": "Wari",
+    "count": 125,
+    "lat": -12,
+    "lng": -74
+  },
+  {
+    "label": "Pakistan",
+    "count": 123,
+    "lat": 30,
+    "lng": 70
+  },
+  {
+    "label": "Kuba peoples",
+    "count": 114,
+    "lat": -5,
+    "lng": 22
+  },
+  {
+    "label": "Fon peoples",
+    "count": 112,
+    "lat": 7,
+    "lng": 2
+  },
+  {
+    "label": "Javanese",
+    "count": 110,
+    "lat": -7,
+    "lng": 110
+  },
+  {
+    "label": "Greek",
+    "count": 109,
+    "lat": 38,
+    "lng": 23
+  },
+  {
+    "label": "Cambodia",
+    "count": 108,
+    "lat": 12,
+    "lng": 105
+  },
+  {
+    "label": "Belgian, Brussels",
+    "count": 106,
+    "lat": 51,
+    "lng": 4
+  },
+  {
+    "label": "French, Beauvais",
+    "count": 99,
+    "lat": 49,
+    "lng": 2
+  },
+  {
+    "label": "Swiss",
+    "count": 98,
+    "lat": 47,
+    "lng": 8
+  },
+  {
+    "label": "Vietnam",
+    "count": 97,
+    "lat": 16,
+    "lng": 107
+  },
+  {
+    "label": "Aztec",
+    "count": 96,
+    "lat": 19,
+    "lng": -99
+  },
+  {
+    "label": "Hungarian",
+    "count": 92,
+    "lat": 47,
+    "lng": 19
+  },
+  {
+    "label": "North China",
+    "count": 90,
+    "lat": 40,
+    "lng": 116
+  },
+  {
+    "label": "French, Lyons",
+    "count": 88,
+    "lat": 45,
+    "lng": 5
+  },
+  {
+    "label": "Baule peoples",
+    "count": 84,
+    "lat": 7,
+    "lng": -5
+  },
+  {
+    "label": "Chancay",
+    "count": 57,
+    "lat": -11,
+    "lng": -77
+  }
+]
