@@ -54,9 +54,10 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
 
   const handleSendPostcard = () => {
     if (!email) return;
-    const subject = encodeURIComponent(`A postcard for you: ${artwork.title}`);
+    const senderFirstName = email.split("@")[0].split(".")[0];
+    const subject = encodeURIComponent(`${senderFirstName} sent you a postcard from The Reel Museum`);
     const body = encodeURIComponent(
-      `I wanted to share this artwork with you:\n\n"${artwork.title}"${artwork.artistDisplayName ? ` by ${artwork.artistDisplayName}` : ""}${artwork.objectDate ? `, ${artwork.objectDate}` : ""}\n\nView it here: ${shareUrl}`
+      `I came across this piece and wanted to share with you.\n\n"${artwork.title}"${artwork.artistDisplayName ? ` by ${artwork.artistDisplayName}` : ""}${artwork.objectDate ? `, ${artwork.objectDate}` : ""}\n\nView it here: ${shareUrl}\n\nThe Reel Museum is a museum without walls, celebrating 5,000 years of textiles and human craftsmanship. Scroll, discover and share pieces from human history around the globe.`
     );
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, "_self");
     addActivity({
