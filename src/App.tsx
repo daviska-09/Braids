@@ -8,6 +8,7 @@ import Gallery from "@/pages/Gallery";
 import Uncovered from "@/pages/Uncovered";
 import CurateTogether from "@/pages/CurateTogether";
 import Journal from "@/pages/Journal";
+import LaceArchive from "@/pages/LaceArchive";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
         <Header />
         <Routes>
           <Route path="/" element={<Gallery />} />
+          <Route path="/lace-archive" element={<LaceArchive />} />
           <Route path="/uncovered" element={<Uncovered />} />
           <Route path="/curate" element={<CurateTogether />} />
           <Route path="/journal" element={<Journal />} />

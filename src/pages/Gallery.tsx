@@ -1,19 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchTextileObjectIds, fetchObject, type MetObject } from "@/lib/metApi";
+import { fetchTextileObjectIds } from "@/lib/metApi";
+import { fetchArtwork, fromMetObject, interleave, type Artwork, type TaggedId } from "@/lib/artwork";
+import { fetchObject } from "@/lib/metApi";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import { X } from "lucide-react";
 
 const BATCH_SIZE = 11;
 
-function matchesOrigins(art: MetObject, origins: string[]): boolean {
+function matchesOrigins(art: Artwork, origins: string[]): boolean {
   const fields = [
     art.artistNationality,
     art.country,
     art.culture,
     art.region,
-    art.locale,
   ].map((f) => (f || "").toLowerCase());
 
   return origins.some((origin) => {
@@ -22,47 +23,59 @@ function matchesOrigins(art: MetObject, origins: string[]): boolean {
   });
 }
 
+async function fetchMixedTextileIds(): Promise<TaggedId[]> {
+  const [metIds, aicIds] = await Promise.all([
+    fetchTextileObjectIds().then((ids) =>
+      ids.map((id): TaggedId => ({ id, museum: "met" }))
+    ),
+    fetch("/aic-textile-ids.json")
+      .then((r) => r.json())
+      .then((ids: number[]) => ids.map((id): TaggedId => ({ id, museum: "aic" })))
+      .catch(() => [] as TaggedId[]),
+  ]);
+  return interleave(metIds, aicIds);
+}
+
 const Gallery = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const originsParam = searchParams.get("origins");
   const origins = originsParam ? originsParam.split(",").map((s) => s.trim()) : [];
 
-  const [allIds, setAllIds] = useState<number[]>([]);
-  const [artworks, setArtworks] = useState<MetObject[]>([]);
+  const [allIds, setAllIds] = useState<TaggedId[]>([]);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [cursor, setCursor] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pendingSkeletons, setPendingSkeletons] = useState(BATCH_SIZE);
-  const [selectedArtwork, setSelectedArtwork] = useState<MetObject | null>(null);
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Deep-link: open artwork modal from ?artwork=ID
+  // Deep-link: open artwork modal from ?artwork=ID (Met only)
   useEffect(() => {
     const artworkId = searchParams.get("artwork");
     if (artworkId) {
       fetchObject(Number(artworkId)).then((obj) => {
-        if (obj) setSelectedArtwork(obj);
+        if (obj) setSelectedArtwork(fromMetObject(obj));
       });
     }
   }, []);
 
   useEffect(() => {
-    // Cancel any in-flight batch when origins change
     abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
     setLoading(true);
     loadingRef.current = false;
     setPendingSkeletons(BATCH_SIZE);
-    fetchTextileObjectIds().then((ids) => {
+    fetchMixedTextileIds().then((ids) => {
       setAllIds(ids);
       loadBatch(ids, 0);
     });
     return () => { abortRef.current?.abort(); };
   }, [originsParam]);
 
-  const loadBatch = async (ids: number[], start: number) => {
+  const loadBatch = async (ids: TaggedId[], start: number) => {
     if (start >= ids.length) return;
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -71,11 +84,11 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
     await Promise.all(
-      slice.map(id =>
-        fetchObject(id, 2, controller.signal).then(obj => {
-          if (obj && !controller.signal.aborted) {
-            setArtworks(prev => [...prev, obj]);
-            setPendingSkeletons(prev => Math.max(0, prev - 1));
+      slice.map((item) =>
+        fetchArtwork(item, 2, controller.signal).then((artwork) => {
+          if (artwork && !controller.signal.aborted) {
+            setArtworks((prev) => [...prev, artwork]);
+            setPendingSkeletons((prev) => Math.max(0, prev - 1));
           }
         })
       )
@@ -149,7 +162,7 @@ const Gallery = () => {
         <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
           {filteredArtworks.map((art, i) => (
             <ArtworkCard
-              key={art.objectID}
+              key={`${art.museum}-${art.id}`}
               artwork={art}
               index={i % BATCH_SIZE}
               onClick={() => setSelectedArtwork(art)}

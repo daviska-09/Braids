@@ -14,6 +14,14 @@ const Header = () => {
             collection
           </NavLink>
           <NavLink
+            to="/lace-archive"
+            className={({ isActive }) =>
+              isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
+            }
+          >
+            lace archive
+          </NavLink>
+          <NavLink
             to="/uncovered"
             className={({ isActive }) =>
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"

@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import type { MetObject } from "@/lib/metApi";
+import type { Artwork } from "@/lib/artwork";
 
 interface ArtworkCardProps {
-  artwork: MetObject;
+  artwork: Artwork;
   index: number;
   onClick: () => void;
 }
@@ -28,7 +28,7 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
           <div className="w-full bg-muted animate-pulse" style={{ paddingBottom: placeholderPadding.current }} />
         )}
         <img
-          src={artwork.primaryImageSmall}
+          src={artwork.imageSmall}
           alt={artwork.title}
           loading="lazy"
           onLoad={() => setLoaded(true)}
@@ -45,14 +45,14 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
           <p className="text-primary-foreground text-sm font-serif leading-snug line-clamp-2">
             {artwork.title}
           </p>
-          {artwork.artistDisplayName && (
+          {artwork.artist && (
             <p className="text-primary-foreground/70 text-xs mt-1">
-              {artwork.artistDisplayName}
+              {artwork.artist}
             </p>
           )}
-          {artwork.objectDate && (
+          {artwork.date && (
             <p className="text-primary-foreground/50 text-xs mt-0.5">
-              {artwork.objectDate}
+              {artwork.date}
             </p>
           )}
         </motion.div>

@@ -1,35 +1,39 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { MetObject } from "@/lib/metApi";
+import type { Artwork } from "@/lib/artwork";
 import { addActivity, isArtworkSaved } from "@/lib/activityStore";
 import { X, Link2, Mail, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
 interface ArtworkModalProps {
-  artwork: MetObject | null;
+  artwork: Artwork | null;
   onClose: () => void;
 }
 
 const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
-  const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.objectID) : false);
-  const [imgSrc, setImgSrc] = useState(artwork?.primaryImageSmall ?? "");
+  const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.id) : false);
+  const [imgSrc, setImgSrc] = useState(artwork?.imageSmall ?? "");
   const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     if (!artwork) return;
-    setImgSrc(artwork.primaryImageSmall);
+    setImgSrc(artwork.imageSmall);
     setImgLoaded(false);
-    if (!artwork.primaryImage) return;
+    if (!artwork.imageFull) return;
     const img = new Image();
-    img.src = artwork.primaryImage;
-    img.onload = () => setImgSrc(artwork.primaryImage);
-  }, [artwork?.objectID]);
+    img.src = artwork.imageFull;
+    img.onload = () => setImgSrc(artwork.imageFull);
+  }, [artwork?.id]);
 
   if (!artwork) return null;
 
-  const shareUrl = `${window.location.origin}/?artwork=${artwork.objectID}`;
+  const isMet = artwork.museum === "The Metropolitan Museum of Art";
+  const shareUrl = isMet
+    ? `${window.location.origin}/?artwork=${artwork.id}`
+    : artwork.objectUrl;
+  const viewLabel = isMet ? "View on metmuseum.org →" : "View on artic.edu →";
 
   const handleCopyLink = async () => {
     try {
@@ -42,10 +46,10 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
 
   const handleSave = () => {
     addActivity({
-      artworkId: artwork.objectID,
+      artworkId: artwork.id,
       artworkTitle: artwork.title,
-      artworkArtist: artwork.artistDisplayName,
-      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
+      artworkArtist: artwork.artist,
+      artworkImage: artwork.imageSmall || artwork.imageFull,
       action: "saved",
     });
     setIsSaved(true);
@@ -57,14 +61,14 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
     const senderFirstName = email.split("@")[0].split(".")[0];
     const subject = encodeURIComponent(`${senderFirstName} sent you a postcard from The Reel Museum`);
     const body = encodeURIComponent(
-      `I came across this piece and wanted to share with you.\n\n"${artwork.title}"${artwork.artistDisplayName ? ` by ${artwork.artistDisplayName}` : ""}${artwork.objectDate ? `, ${artwork.objectDate}` : ""}\n\nView it here: ${shareUrl}\n\nThe Reel Museum is a museum without walls, celebrating 5,000 years of textiles and human craftsmanship. Scroll, discover and share pieces from human history around the globe.`
+      `I came across this piece and wanted to share with you.\n\n"${artwork.title}"${artwork.artist ? ` by ${artwork.artist}` : ""}${artwork.date ? `, ${artwork.date}` : ""}\n\nView it here: ${shareUrl}\n\nThe Reel Museum is a museum without walls, celebrating 5,000 years of textiles and human craftsmanship. Scroll, discover and share pieces from human history around the globe.`
     );
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, "_self");
     addActivity({
-      artworkId: artwork.objectID,
+      artworkId: artwork.id,
       artworkTitle: artwork.title,
-      artworkArtist: artwork.artistDisplayName,
-      artworkImage: artwork.primaryImageSmall || artwork.primaryImage,
+      artworkArtist: artwork.artist,
+      artworkImage: artwork.imageSmall || artwork.imageFull,
       action: "sent",
       recipientHint: email.split("@")[0],
     });
@@ -109,20 +113,20 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
             </div>
             <div className="md:w-1/2 p-8 flex flex-col justify-center">
               <h2 className="font-serif text-xl leading-snug mb-3">{artwork.title}</h2>
-              {artwork.artistDisplayName && (
-                <p className="text-sm text-muted-foreground mb-1">{artwork.artistDisplayName}</p>
+              {artwork.artist && (
+                <p className="text-sm text-muted-foreground mb-1">{artwork.artist}</p>
               )}
-              {artwork.artistDisplayBio && (
-                <p className="text-xs text-muted-foreground mb-4">{artwork.artistDisplayBio}</p>
+              {artwork.artistBio && (
+                <p className="text-xs text-muted-foreground mb-4">{artwork.artistBio}</p>
               )}
               <div className="space-y-2 text-xs text-muted-foreground">
-                {artwork.objectDate && <Detail label="Date" value={artwork.objectDate} />}
+                {artwork.date && <Detail label="Date" value={artwork.date} />}
                 {artwork.medium && <Detail label="Medium" value={artwork.medium} />}
                 {artwork.dimensions && <Detail label="Dimensions" value={artwork.dimensions} />}
                 {artwork.culture && <Detail label="Culture" value={artwork.culture} />}
                 {artwork.classification && <Detail label="Classification" value={artwork.classification} />}
                 {artwork.department && <Detail label="Department" value={artwork.department} />}
-                {artwork.creditLine && <Detail label="Credit" value={artwork.creditLine} />}
+                {artwork.credit && <Detail label="Credit" value={artwork.credit} />}
               </div>
 
               {/* Share actions */}
@@ -166,14 +170,14 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
                 </div>
               )}
 
-              {artwork.objectURL && (
+              {artwork.objectUrl && (
                 <a
-                  href={artwork.objectURL}
+                  href={artwork.objectUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 text-xs text-accent hover:underline"
                 >
-                  View on metmuseum.org →
+                  {viewLabel}
                 </a>
               )}
             </div>
