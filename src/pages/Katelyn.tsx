@@ -637,8 +637,8 @@ const Katelyn = () => {
           {/* Dollhouse */}
           <div
             ref={dhContainerRef}
-            className="flex-1 relative select-none min-w-0 overflow-hidden"
-            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default", isolation: "isolate" }}
+            className="flex-1 relative select-none min-w-0"
+            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default", clipPath: "inset(0)" }}
           >
             <div
               style={{
@@ -651,7 +651,7 @@ const Katelyn = () => {
                 src="/dollhouse.png"
                 alt="Petronella de la Court's dolls' house, c.1670"
                 className="w-full block"
-                style={{ mixBlendMode: "multiply", WebkitTransform: "translateZ(0)" }}
+                style={{ mixBlendMode: "multiply" }}
                 draggable={false}
               />
               {draft.projects.map((project, i) => {
