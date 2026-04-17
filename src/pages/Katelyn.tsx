@@ -13,6 +13,8 @@ interface ProjectContent { id: string; title: string; body: string }
 interface EducationItem { school: string; degree: string }
 interface PageContent {
   about: string;
+  houseTitle: string;
+  houseSubtitle: string;
   projects: ProjectContent[];
   education: EducationItem[];
   media: Record<string, SectionMedia>;
@@ -108,6 +110,8 @@ const RAW_PROJECTS = [
 function makeDefault(): PageContent {
   return {
     about: DEFAULT_ABOUT,
+    houseTitle: "house tour",
+    houseSubtitle: "click a room to explore.",
     projects: RAW_PROJECTS.map(p => ({ ...p, body: toHtml(p.body) })),
     education: [
       { school: "london school of economics", degree: "msc media and communications (governance), starting september 2026" },
@@ -127,8 +131,10 @@ function loadContent(): PageContent {
       const p = JSON.parse(raw) as Partial<PageContent>;
       const d = makeDefault();
       return {
-        about:     p.about     ?? d.about,
-        projects:  p.projects  ?? d.projects,
+        about:         p.about         ?? d.about,
+        houseTitle:    p.houseTitle    ?? d.houseTitle,
+        houseSubtitle: p.houseSubtitle ?? d.houseSubtitle,
+        projects:      p.projects      ?? d.projects,
         education: p.education ?? d.education,
         media:     p.media     ?? {},
         sizes:     p.sizes     ?? {},
@@ -343,6 +349,7 @@ const Katelyn = () => {
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        // Pinch — prevent browser zoom
         e.preventDefault();
         const dx = e.touches[1].clientX - e.touches[0].clientX;
         const dy = e.touches[1].clientY - e.touches[0].clientY;
@@ -359,10 +366,12 @@ const Katelyn = () => {
         };
         setDhTransitioning(false);
       } else if (e.touches.length === 1 && dhTransformRef.current.scale > 1) {
+        // Single-finger pan only when zoomed in
         const cur = dhTransformRef.current;
         dhDragRef.current = { active: true, moved: false, startX: e.touches[0].clientX, startY: e.touches[0].clientY, origX: cur.x, origY: cur.y };
         setDhTransitioning(false);
       }
+      // scale === 1 + single touch: let page scroll pass through (no preventDefault)
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -387,6 +396,7 @@ const Katelyn = () => {
         dhTransformRef.current = next;
         setDhTransform(next);
       }
+      // Otherwise let the event bubble (page scroll)
     };
 
     const onTouchEnd = () => { dhPinchRef.current.active = false; dhDragRef.current.active = false; };
@@ -452,7 +462,9 @@ const Katelyn = () => {
 
   // ── Content setters ───────────────────────────────────────────────────────────
 
-  const setAbout = (html: string) => setDraft(p => ({ ...p, about: html }));
+  const setAbout        = (html: string) => setDraft(p => ({ ...p, about: html }));
+  const setHouseTitle   = (html: string) => setDraft(p => ({ ...p, houseTitle: html }));
+  const setHouseSubtitle = (html: string) => setDraft(p => ({ ...p, houseSubtitle: html }));
   const setProjectTitle = (id: string, html: string) =>
     setDraft(p => ({ ...p, projects: p.projects.map(pr => pr.id === id ? { ...pr, title: html } : pr) }));
   const setProjectBody = (id: string, html: string) =>
@@ -593,6 +605,24 @@ const Katelyn = () => {
       {/* Dollhouse + Sidebar */}
       <div className="mb-12 mx-auto max-w-[1000px]">
 
+        {/* House tour heading */}
+        <div className="mb-4">
+          <EditableBlock
+            html={draft.houseTitle}
+            onHtmlChange={setHouseTitle}
+            isEditing={isAuth}
+            className={`font-serif text-2xl md:text-3xl text-foreground ${SIZE_CLASS[(draft.sizes["houseTitle"] as TextSize) ?? "heading"]}`}
+            onFocused={focusBlock("houseTitle")}
+          />
+          <EditableBlock
+            html={draft.houseSubtitle}
+            onHtmlChange={setHouseSubtitle}
+            isEditing={isAuth}
+            className={`mt-1 font-serif text-foreground/60 ${SIZE_CLASS[(draft.sizes["houseSubtitle"] as TextSize) ?? "large"]}`}
+            onFocused={focusBlock("houseSubtitle")}
+          />
+        </div>
+
         {/* Mobile: horizontal scroll list */}
         <div className="md:hidden mb-4 overflow-x-auto flex gap-6 pb-1">
           {draft.projects.map(project => (
@@ -608,21 +638,20 @@ const Katelyn = () => {
           <div
             ref={dhContainerRef}
             className="flex-1 relative select-none min-w-0 overflow-hidden"
-            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default" }}
+            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default", isolation: "isolate" }}
           >
             <div
               style={{
                 transform: `translate(${dhTransform.x}px, ${dhTransform.y}px) scale(${dhTransform.scale})`,
                 transformOrigin: "0 0",
                 transition: dhTransitioning ? "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-                willChange: "transform",
               }}
             >
               <img
                 src="/dollhouse.png"
                 alt="Petronella de la Court's dolls' house, c.1670"
                 className="w-full block"
-                style={{ mixBlendMode: "multiply" }}
+                style={{ mixBlendMode: "multiply", WebkitTransform: "translateZ(0)" }}
                 draggable={false}
               />
               {draft.projects.map((project, i) => {
@@ -634,6 +663,14 @@ const Katelyn = () => {
                     key={project.id}
                     onMouseEnter={() => setHoveredRoom(project.id)}
                     onMouseLeave={() => setHoveredRoom(null)}
+                    onTouchStart={() => setHoveredRoom(project.id)}
+                    onTouchEnd={(e) => {
+                      if (dhDragRef.current.moved || dhPinchRef.current.active) return;
+                      e.preventDefault();
+                      setHoveredRoom(null);
+                      zoomToRoom(i);
+                      setActiveRoom(project.id);
+                    }}
                     onClick={() => {
                       if (dhDragRef.current.moved) { dhDragRef.current.moved = false; return; }
                       zoomToRoom(i);
@@ -712,7 +749,7 @@ const Katelyn = () => {
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground/70 text-center italic">
-          petronella de la court's dolls' house, c.1670. centraal museum, utrecht. click a room to explore.
+          petronella de la court's dolls' house, c.1670. centraal museum, utrecht.
         </p>
       </div>
 
