@@ -29,11 +29,13 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
 
   if (!artwork) return null;
 
-  const isMet = artwork.museum === "The Metropolitan Museum of Art";
-  const shareUrl = isMet
+  const shareUrl = artwork.museum === "The Metropolitan Museum of Art"
     ? `${window.location.origin}/?artwork=${artwork.id}`
     : artwork.objectUrl;
-  const viewLabel = isMet ? "View on metmuseum.org →" : "View on artic.edu →";
+  const viewLabel =
+    artwork.source === "europeana" ? "View on europeana.eu →" :
+    artwork.museum === "The Metropolitan Museum of Art" ? "View on metmuseum.org →" :
+    "View on artic.edu →";
 
   const handleCopyLink = async () => {
     try {

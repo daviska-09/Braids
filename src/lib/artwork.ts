@@ -3,13 +3,12 @@ import { fetchObject } from "./metApi";
 import { fetchArticObject } from "./articApi";
 
 export interface Artwork {
-  id: number;
+  id: string;
   title: string;
   artist: string;
   artistBio: string;
   date: string;
   culture: string;
-  // Extended origin fields — populated for Met objects, empty string for AIC
   country: string;
   region: string;
   artistNationality: string;
@@ -21,12 +20,13 @@ export interface Artwork {
   imageSmall: string;
   imageFull: string;
   objectUrl: string;
-  museum: "The Metropolitan Museum of Art" | "Art Institute of Chicago";
+  museum: string;
+  source?: "europeana";
 }
 
 export function fromMetObject(obj: MetObject): Artwork {
   return {
-    id: obj.objectID,
+    id: String(obj.objectID),
     title: obj.title || "",
     artist: obj.artistDisplayName || "",
     artistBio: obj.artistDisplayBio || "",

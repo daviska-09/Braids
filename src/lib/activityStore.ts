@@ -1,6 +1,6 @@
 export interface ActivityEntry {
   id: string;
-  artworkId: number;
+  artworkId: string;
   artworkTitle: string;
   artworkArtist: string;
   artworkImage: string;
@@ -44,7 +44,7 @@ export function removeActivity(id: string) {
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 
-export function isArtworkSaved(artworkId: number): boolean {
+export function isArtworkSaved(artworkId: string): boolean {
   return getActivities().some((a) => a.artworkId === artworkId && a.action === "saved");
 }
 

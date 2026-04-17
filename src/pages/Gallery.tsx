@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchTextileObjectIds } from "@/lib/metApi";
+import { fetchTextileObjectIds, fetchObject } from "@/lib/metApi";
 import { fetchArtwork, fromMetObject, interleave, type Artwork, type TaggedId } from "@/lib/artwork";
-import { fetchObject } from "@/lib/metApi";
+import { fetchEuropeanaCollection } from "@/services/europeanaService";
+import { isCollectionPiece } from "@/utils/textileFilters";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import { X } from "lucide-react";
@@ -10,13 +11,8 @@ import { X } from "lucide-react";
 const BATCH_SIZE = 11;
 
 function matchesOrigins(art: Artwork, origins: string[]): boolean {
-  const fields = [
-    art.artistNationality,
-    art.country,
-    art.culture,
-    art.region,
-  ].map((f) => (f || "").toLowerCase());
-
+  const fields = [art.artistNationality, art.country, art.culture, art.region]
+    .map((f) => (f || "").toLowerCase());
   return origins.some((origin) => {
     const o = origin.toLowerCase();
     return fields.some((f) => f.includes(o));
@@ -50,6 +46,7 @@ const Gallery = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const euroPageRef = useRef(1);
 
   // Deep-link: open artwork modal from ?artwork=ID (Met only)
   useEffect(() => {
@@ -65,17 +62,18 @@ const Gallery = () => {
     abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
+    euroPageRef.current = 1;
     setLoading(true);
     loadingRef.current = false;
     setPendingSkeletons(BATCH_SIZE);
     fetchMixedTextileIds().then((ids) => {
       setAllIds(ids);
-      loadBatch(ids, 0);
+      loadBatch(ids, 0, 1);
     });
     return () => { abortRef.current?.abort(); };
   }, [originsParam]);
 
-  const loadBatch = async (ids: TaggedId[], start: number) => {
+  const loadBatch = async (ids: TaggedId[], start: number, euroPage: number) => {
     if (start >= ids.length) return;
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -83,18 +81,31 @@ const Gallery = () => {
     loadingRef.current = true;
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
-    await Promise.all(
-      slice.map((item) =>
+
+    await Promise.all([
+      // Met + AIC items
+      ...slice.map((item) =>
         fetchArtwork(item, 2, controller.signal).then((artwork) => {
-          if (artwork && !controller.signal.aborted) {
+          if (artwork && !controller.signal.aborted && isCollectionPiece(artwork)) {
             setArtworks((prev) => [...prev, artwork]);
             setPendingSkeletons((prev) => Math.max(0, prev - 1));
           }
         })
-      )
-    );
+      ),
+      // Europeana items (fetched in parallel with each batch)
+      fetchEuropeanaCollection(euroPage).then((items) => {
+        if (controller.signal.aborted) return;
+        const filtered = items.filter(isCollectionPiece);
+        if (filtered.length > 0) {
+          setArtworks((prev) => [...prev, ...filtered]);
+          setPendingSkeletons((prev) => Math.max(0, prev - filtered.length));
+        }
+      }),
+    ]);
+
     if (!controller.signal.aborted) {
       setCursor(start + slice.length);
+      euroPageRef.current = euroPage + 1;
       setLoading(false);
       setPendingSkeletons(0);
       loadingRef.current = false;
@@ -103,7 +114,7 @@ const Gallery = () => {
 
   const loadMore = useCallback(() => {
     if (loadingRef.current || cursor >= allIds.length) return;
-    loadBatch(allIds, cursor);
+    loadBatch(allIds, cursor, euroPageRef.current);
   }, [allIds, cursor]);
 
   useEffect(() => {
@@ -117,9 +128,7 @@ const Gallery = () => {
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const clearFilter = () => {
-    setSearchParams({});
-  };
+  const clearFilter = () => setSearchParams({});
 
   const filteredArtworks = origins.length > 0
     ? artworks.filter((art) => matchesOrigins(art, origins))

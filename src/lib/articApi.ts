@@ -32,7 +32,7 @@ export interface ArticObject {
 
 export function articObjectToArtwork(obj: ArticObject): Artwork {
   return {
-    id: obj.id,
+    id: String(obj.id),
     title: obj.title || "",
     artist: obj.artist_title || "",
     artistBio: "",
