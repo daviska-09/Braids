@@ -222,6 +222,11 @@ function FloatingToolbar({ anchor, size, onSizeChange }: {
     const url = window.prompt("url:");
     if (url) cmd("createLink", url);
   };
+  const insertFavicon = (e: React.MouseEvent) => {
+    e.preventDefault();
+    anchor.focus();
+    document.execCommand("insertHTML", false, '<img src="/favicon.png" alt="⬡" style="width:1em;height:1em;display:inline;vertical-align:middle;margin:0 1px" draggable="false" />');
+  };
 
   return (
     <div
@@ -239,6 +244,10 @@ function FloatingToolbar({ anchor, size, onSizeChange }: {
       <button onMouseDown={e => { prevent(e); cmd("bold"); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Bold className="w-3 h-3" /></button>
       <button onMouseDown={e => { prevent(e); cmd("italic"); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Italic className="w-3 h-3" /></button>
       <button onMouseDown={handleLink} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Link2 className="w-3 h-3" /></button>
+      <div className="w-px h-4 bg-border mx-1" />
+      <button onMouseDown={insertFavicon} title="insert reel museum icon" className="p-1 rounded hover:bg-muted transition-colors">
+        <img src="/favicon.png" alt="⬡" className="w-3 h-3 inline" />
+      </button>
     </div>
   );
 }
