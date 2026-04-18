@@ -9,6 +9,15 @@ import ArtworkModal from "@/components/ArtworkModal";
 import { X } from "lucide-react";
 
 const BATCH_SIZE = 11;
+const EXPLORED_KEY = "reel_explored";
+const seenIds = new Set<string>(); // per-session dedup
+
+function recordExplored(id: string) {
+  if (seenIds.has(id)) return;
+  seenIds.add(id);
+  const current = Number(localStorage.getItem(EXPLORED_KEY) ?? "0");
+  localStorage.setItem(EXPLORED_KEY, String(current + 1));
+}
 
 function matchesOrigins(art: Artwork, origins: string[]): boolean {
   const fields = [art.artistNationality, art.country, art.culture, art.region]
@@ -174,7 +183,7 @@ const Gallery = () => {
               key={`${art.museum}-${art.id}`}
               artwork={art}
               index={i % BATCH_SIZE}
-              onClick={() => setSelectedArtwork(art)}
+              onClick={() => { setSelectedArtwork(art); recordExplored(art.id); }}
             />
           ))}
           {pendingSkeletons > 0 && Array.from({ length: pendingSkeletons }).map((_, i) => (
