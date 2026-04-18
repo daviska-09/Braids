@@ -637,8 +637,8 @@ const Katelyn = () => {
           {/* Dollhouse */}
           <div
             ref={dhContainerRef}
-            className="flex-1 relative select-none min-w-0"
-            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default", clipPath: "inset(0)" }}
+            className="flex-1 relative select-none min-w-0 overflow-hidden"
+            style={{ cursor: dhTransform.scale > 1 ? "grab" : "default", background: "hsl(var(--background))" }}
           >
             <div
               style={{
