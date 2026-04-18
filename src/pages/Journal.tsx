@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { getPosts, addPost, updatePost, deletePost, isAdmin, toggleAdmin, type BlogPost } from "@/lib/blogStore";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { getPosts, addPost, updatePost, deletePost, isAdmin, toggleAdmin, initPosts, exportPostsJson, type BlogPost } from "@/lib/blogStore";
+import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -11,7 +11,19 @@ const Journal = () => {
   const [editing, setEditing] = useState<BlogPost | null>(null);
   const [creating, setCreating] = useState(false);
 
+  useEffect(() => {
+    initPosts().then(refresh);
+  }, []);
+
   const refresh = () => setPosts(getPosts());
+
+  const handleExport = () => {
+    const blob = new Blob([exportPostsJson()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "journal-posts.json"; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleTripleClick = useCallback(() => {
     const next = toggleAdmin();
@@ -92,12 +104,21 @@ const Journal = () => {
       </div>
 
       {admin && !showForm && (
-        <button
-          onClick={() => setCreating(true)}
-          className="fixed bottom-8 right-8 w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
+        <div className="fixed bottom-8 right-8 flex flex-col items-end gap-3">
+          <button
+            onClick={handleExport}
+            title="Export posts to JSON (then replace public/journal-posts.json in the repo)"
+            className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center shadow hover:scale-105 transition-transform"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setCreating(true)}
+            className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
       )}
 
       {/* Post detail modal */}

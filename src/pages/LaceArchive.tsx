@@ -160,8 +160,7 @@ const LaceArchive = () => {
       <div className="mt-2 mb-10 max-w-xl">
         <h1 className="font-serif text-2xl md:text-3xl text-foreground mb-3">lace archive</h1>
         <p className="font-serif text-lg md:text-xl text-foreground/80">
-          a dedicated archive of lace and crochet from across human history. from needle lace to
-          irish crochet, these are the most delicate threads in the collection.
+          a dedicated archive of lace and crochet from across human history. these are the most delicate threads in the collection.
         </p>
         <div className="flex items-center gap-6 mt-4 text-sm tracking-wide">
           <button

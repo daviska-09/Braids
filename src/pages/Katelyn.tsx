@@ -15,6 +15,10 @@ interface PageContent {
   about: string;
   houseTitle: string;
   houseSubtitle: string;
+  headerName: string;
+  headerTagline: string;
+  headerLocation: string;
+  footerNote: string;
   projects: ProjectContent[];
   education: EducationItem[];
   media: Record<string, SectionMedia>;
@@ -112,6 +116,10 @@ function makeDefault(): PageContent {
     about: DEFAULT_ABOUT,
     houseTitle: "house tour",
     houseSubtitle: "click a room to explore.",
+    headerName: "katelyn davis",
+    headerTagline: "marketer. designer. researcher. builder.",
+    headerLocation: "born in galway, building in dublin",
+    footerNote: "this page is not linked from the main site. if you have it, please share me responsibly.",
     projects: RAW_PROJECTS.map(p => ({ ...p, body: toHtml(p.body) })),
     education: [
       { school: "london school of economics", degree: "msc media and communications (governance), starting september 2026" },
@@ -131,9 +139,13 @@ function loadContent(): PageContent {
       const p = JSON.parse(raw) as Partial<PageContent>;
       const d = makeDefault();
       return {
-        about:         p.about         ?? d.about,
-        houseTitle:    p.houseTitle    ?? d.houseTitle,
-        houseSubtitle: p.houseSubtitle ?? d.houseSubtitle,
+        about:          p.about          ?? d.about,
+        houseTitle:     p.houseTitle     ?? d.houseTitle,
+        houseSubtitle:  p.houseSubtitle  ?? d.houseSubtitle,
+        headerName:     p.headerName     ?? d.headerName,
+        headerTagline:  p.headerTagline  ?? d.headerTagline,
+        headerLocation: p.headerLocation ?? d.headerLocation,
+        footerNote:     p.footerNote     ?? d.footerNote,
         projects:      p.projects      ?? d.projects,
         education: p.education ?? d.education,
         media:     p.media     ?? {},
@@ -462,9 +474,13 @@ const Katelyn = () => {
 
   // ── Content setters ───────────────────────────────────────────────────────────
 
-  const setAbout        = (html: string) => setDraft(p => ({ ...p, about: html }));
-  const setHouseTitle   = (html: string) => setDraft(p => ({ ...p, houseTitle: html }));
-  const setHouseSubtitle = (html: string) => setDraft(p => ({ ...p, houseSubtitle: html }));
+  const setAbout          = (html: string) => setDraft(p => ({ ...p, about: html }));
+  const setHouseTitle     = (html: string) => setDraft(p => ({ ...p, houseTitle: html }));
+  const setHouseSubtitle  = (html: string) => setDraft(p => ({ ...p, houseSubtitle: html }));
+  const setHeaderName     = (html: string) => setDraft(p => ({ ...p, headerName: html }));
+  const setHeaderTagline  = (html: string) => setDraft(p => ({ ...p, headerTagline: html }));
+  const setHeaderLocation = (html: string) => setDraft(p => ({ ...p, headerLocation: html }));
+  const setFooterNote     = (html: string) => setDraft(p => ({ ...p, footerNote: html }));
   const setProjectTitle = (id: string, html: string) =>
     setDraft(p => ({ ...p, projects: p.projects.map(pr => pr.id === id ? { ...pr, title: html } : pr) }));
   const setProjectBody = (id: string, html: string) =>
@@ -592,9 +608,27 @@ const Katelyn = () => {
 
       {/* Header */}
       <div className="mt-2 mb-10 max-w-2xl">
-        <h1 className="font-serif text-2xl md:text-3xl text-foreground mb-1">katelyn davis</h1>
-        <p className="font-serif text-lg text-foreground/60 mb-4">marketer. designer. researcher. builder.</p>
-        <p className="text-sm text-muted-foreground mb-3">born in galway, building in dublin</p>
+        <EditableBlock
+          html={draft.headerName}
+          onHtmlChange={setHeaderName}
+          isEditing={isAuth}
+          className="font-serif text-2xl md:text-3xl text-foreground mb-1"
+          onFocused={focusBlock("headerName")}
+        />
+        <EditableBlock
+          html={draft.headerTagline}
+          onHtmlChange={setHeaderTagline}
+          isEditing={isAuth}
+          className="font-serif text-lg text-foreground/60 mb-4"
+          onFocused={focusBlock("headerTagline")}
+        />
+        <EditableBlock
+          html={draft.headerLocation}
+          onHtmlChange={setHeaderLocation}
+          isEditing={isAuth}
+          className="text-sm text-muted-foreground mb-3"
+          onFocused={focusBlock("headerLocation")}
+        />
         <div className="flex items-center gap-4 text-sm">
           <a href="https://linkedin.com/in/katelyn-davis" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">linkedin</a>
           <a href="https://kat3lyn.substack.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">substack</a>
@@ -791,12 +825,18 @@ const Katelyn = () => {
 
       {/* Footer */}
       <div className="border-t border-border pt-6 max-w-2xl">
-        <p
-          className="text-xs text-muted-foreground leading-relaxed cursor-default select-none"
+        <div
+          className="cursor-default select-none"
           onClick={handleFooterClick}
         >
-          this page is not linked from the main site. if you have it, please share me responsibly.
-        </p>
+          <EditableBlock
+            html={draft.footerNote}
+            onHtmlChange={setFooterNote}
+            isEditing={isAuth}
+            className="text-xs text-muted-foreground leading-relaxed"
+            onFocused={focusBlock("footerNote")}
+          />
+        </div>
         <a href="https://reelmuseum.com" target="_blank" rel="noopener noreferrer"
           className="mt-4 flex items-center gap-2 group w-fit">
           <img src="/favicon.png" alt="Reel Museum" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
