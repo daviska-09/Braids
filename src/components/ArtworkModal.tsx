@@ -13,6 +13,7 @@ interface ArtworkModalProps {
 const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
+  const [senderName, setSenderName] = useState("");
   const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.id) : false);
   const [imgSrc, setImgSrc] = useState(artwork?.imageSmall ?? "");
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -60,7 +61,7 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
 
   const handleSendPostcard = () => {
     if (!email) return;
-    const senderFirstName = email.split("@")[0].split(".")[0];
+    const senderFirstName = senderName.trim() || "Someone";
     const subject = encodeURIComponent(`${senderFirstName} sent you a postcard from The Reel Museum`);
     const body = encodeURIComponent(
       `I came across this piece and wanted to share with you.\n\n"${artwork.title}"${artwork.artist ? ` by ${artwork.artist}` : ""}${artwork.date ? `, ${artwork.date}` : ""}\n\nView it here: ${shareUrl}\n\nThe Reel Museum is a museum without walls, celebrating 5,000 years of textiles and human craftsmanship. Scroll, discover and share pieces from human history around the globe.`
@@ -76,6 +77,7 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
     });
     toast("Postcard ready to send");
     setEmail("");
+    setSenderName("");
     setShowPostcard(false);
   };
 
@@ -154,21 +156,31 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
               </div>
 
               {showPostcard && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-col gap-2">
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="recipient@email.com"
-                    className="flex-1 text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                    type="text"
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                    placeholder="your name"
+                    className="text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                     onKeyDown={(e) => e.key === "Enter" && handleSendPostcard()}
                   />
-                  <button
-                    onClick={handleSendPostcard}
-                    className="text-xs px-3 py-1.5 bg-accent text-accent-foreground rounded hover:opacity-90 transition-opacity"
-                  >
-                    send
-                  </button>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="recipient@email.com"
+                      className="flex-1 text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      onKeyDown={(e) => e.key === "Enter" && handleSendPostcard()}
+                    />
+                    <button
+                      onClick={handleSendPostcard}
+                      className="text-xs px-3 py-1.5 bg-accent text-accent-foreground rounded hover:opacity-90 transition-opacity"
+                    >
+                      send
+                    </button>
+                  </div>
                 </div>
               )}
 

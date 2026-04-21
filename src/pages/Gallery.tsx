@@ -183,7 +183,7 @@ const Gallery = () => {
               key={`${art.museum}-${art.id}`}
               artwork={art}
               index={i % BATCH_SIZE}
-              onClick={() => { setSelectedArtwork(art); recordExplored(art.id); }}
+              onClick={() => { setSelectedArtwork(art); recordExplored(`${art.museum}-${art.id}`); }}
             />
           ))}
           {pendingSkeletons > 0 && Array.from({ length: pendingSkeletons }).map((_, i) => (

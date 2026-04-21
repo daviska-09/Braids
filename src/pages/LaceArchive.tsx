@@ -198,7 +198,7 @@ const LaceArchive = () => {
               key={`${art.museum}-${art.id}`}
               artwork={art}
               index={i % BATCH_SIZE}
-              onClick={() => { setSelectedArtwork(art); recordExplored(art.id); }}
+              onClick={() => { setSelectedArtwork(art); recordExplored(`${art.museum}-${art.id}`); }}
             />
           ))}
           {pendingSkeletons > 0 &&
