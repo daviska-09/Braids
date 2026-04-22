@@ -45,25 +45,18 @@ let cachedObjectIds: number[] | null = null;
 const SESSION_IDS_KEY = "met_textile_ids";
 
 export async function fetchTextileObjectIds(): Promise<number[]> {
-  if (cachedObjectIds) return cachedObjectIds;
 
   const stored = sessionStorage.getItem(SESSION_IDS_KEY);
-  if (stored) {
-    cachedObjectIds = JSON.parse(stored);
-    return cachedObjectIds!;
-  }
+  const ids: number[] = stored ? JSON.parse(stored) : await fetch('/textile-ids.json').then((r) => r.json());
 
-  const res = await fetch('/textile-ids.json');
-  const ids: number[] = await res.json();
-
-  // Shuffle for variety on each page load
+  // Shuffle every call for variety on each page load / refresh
   for (let i = ids.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [ids[i], ids[j]] = [ids[j], ids[i]];
   }
 
+  if (!stored) sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   cachedObjectIds = ids;
-  sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   return ids;
 }
 

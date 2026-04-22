@@ -38,7 +38,13 @@ async function fetchMixedTextileIds(): Promise<TaggedId[]> {
     ),
     fetch("/aic-textile-ids.json")
       .then((r) => r.json())
-      .then((ids: number[]) => ids.map((id): TaggedId => ({ id, museum: "aic" })))
+      .then((ids: number[]) => {
+        for (let i = ids.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+        }
+        return ids.map((id): TaggedId => ({ id, museum: "aic" }));
+      })
       .catch(() => [] as TaggedId[]),
   ]);
   return interleave(metIds, aicIds);
