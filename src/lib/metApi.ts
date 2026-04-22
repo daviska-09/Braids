@@ -52,8 +52,6 @@ function ssGet(id: number): MetObject | null {
 function ssSave(id: number, obj: MetObject) {
   try { sessionStorage.setItem(SS_PREFIX + id, JSON.stringify(obj)); } catch { /* quota */ }
 }
-let cachedObjectIds: number[] | null = null;
-
 const SESSION_IDS_KEY = "met_textile_ids";
 
 export async function fetchTextileObjectIds(): Promise<number[]> {
@@ -68,7 +66,6 @@ export async function fetchTextileObjectIds(): Promise<number[]> {
   }
 
   if (!stored) sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
-  cachedObjectIds = ids;
   return ids;
 }
 
@@ -85,7 +82,7 @@ export async function fetchObject(id: number, retries = 2, signal?: AbortSignal)
     try {
       const res = await fetch(`${BASE}/objects/${id}`, { signal });
       if (res.status === 429) {
-        await delay(1000 * (attempt + 1));
+        if (attempt < retries) await delay(1000 * (attempt + 1));
         continue;
       }
       if (!res.ok) return null;

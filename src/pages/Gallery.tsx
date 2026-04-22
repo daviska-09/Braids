@@ -99,7 +99,7 @@ const Gallery = () => {
       setAllIds(ids);
       loadBatch(ids, 0, 1);
     });
-    return () => { abortRef.current?.abort(); };
+    return () => { abortRef.current?.abort(); prefetchAbortRef.current?.abort(); };
   }, [originsParam]);
 
   // Fires the same fetches as loadBatch but never touches React state — its
@@ -121,10 +121,10 @@ const Gallery = () => {
 
   const loadBatch = async (ids: TaggedId[], start: number, euroPage: number) => {
     if (start >= ids.length) return;
-    // Cancel any in-flight prefetch — the real load takes priority on the
-    // same IDs; the prefetch controller being aborted is fine because
-    // sessionStorage writes already completed for items that finished.
-    prefetchAbortRef.current?.abort();
+    // Do NOT abort the prefetch here — it may already be warming sessionStorage
+    // for this exact batch. Reads are cache-first so there is no harm in both
+    // running concurrently; the first to complete writes to sessionStorage and
+    // subsequent reads return instantly.
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
