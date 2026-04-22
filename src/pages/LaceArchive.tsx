@@ -4,7 +4,9 @@ import { fetchEuropeanaLace } from "@/services/europeanaService";
 import { isLacePiece } from "@/utils/textileFilters";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
+import Masonry from "react-masonry-css";
 
+const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
 const BATCH_SIZE = 11;
 const EXPLORED_KEY = "reel_explored";
 const seenIds = new Set<string>(); // per-session dedup
@@ -192,7 +194,11 @@ const LaceArchive = () => {
           <p className="text-sm">no lace pieces found in this region of the archive. keep scrolling.</p>
         </div>
       ) : (
-        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
+        <Masonry
+          breakpointCols={MASONRY_BREAKPOINTS}
+          className="masonry-grid"
+          columnClassName="masonry-grid-col"
+        >
           {artworks.map((art, i) => (
             <ArtworkCard
               key={`${art.museum}-${art.id}`}
@@ -205,11 +211,11 @@ const LaceArchive = () => {
             Array.from({ length: pendingSkeletons }).map((_, i) => (
               <div
                 key={`sk-${i}`}
-                className="mb-4 break-inside-avoid bg-muted animate-pulse rounded"
+                className="mb-4 bg-muted animate-pulse rounded"
                 style={{ height: `${180 + (i * 53 % 180)}px` }}
               />
             ))}
-        </div>
+        </Masonry>
       )}
 
       <div ref={sentinelRef} className="h-1" />

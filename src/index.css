@@ -80,3 +80,17 @@
     font-family: var(--font-sans);
   }
 }
+
+/* react-masonry-css */
+.masonry-grid {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+.masonry-grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+}
