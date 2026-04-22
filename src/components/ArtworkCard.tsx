@@ -30,8 +30,8 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
         <img
           src={artwork.imageSmall}
           alt={artwork.title}
-          loading="lazy"
           onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
           className={`w-full block transition-transform duration-700 ease-out ${
             loaded ? "opacity-100" : "opacity-0 absolute inset-0"
           } ${hovered ? "scale-[1.03]" : "scale-100"}`}
