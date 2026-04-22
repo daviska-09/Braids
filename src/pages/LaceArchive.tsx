@@ -115,6 +115,8 @@ const LaceArchive = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
+    const incoming: Artwork[] = [];
+
     await Promise.all([
       // Met items when irish=true are from irish-lace-ids.json — pre-filtered, always pass
       // AIC items when irish=true are filtered by isIrishPiece at runtime
@@ -124,24 +126,18 @@ const LaceArchive = () => {
           const passes =
             isLacePiece(artwork) &&
             (!irish || item.museum === "met" || isIrishPiece(artwork));
-          if (passes) {
-            setArtworks((prev) => [...prev, artwork]);
-            setPendingSkeletons((prev) => Math.max(0, prev - 1));
-          }
+          if (passes) incoming.push(artwork);
         })
       ),
       // Europeana — already scoped by COUNTRY:ireland + Irish lace query when irish=true
       fetchEuropeanaLace(euroPage, irish).then((items) => {
         if (controller.signal.aborted) return;
-        const filtered = items.filter(isLacePiece);
-        if (filtered.length > 0) {
-          setArtworks((prev) => [...prev, ...filtered]);
-          setPendingSkeletons((prev) => Math.max(0, prev - filtered.length));
-        }
+        incoming.push(...items.filter(isLacePiece));
       }),
     ]);
 
     if (!controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...incoming]);
       setCursor(start + slice.length);
       euroPageRef.current = euroPage + 1;
       setLoading(false);

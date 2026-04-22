@@ -94,28 +94,26 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
+    const incoming: Artwork[] = [];
+
     await Promise.all([
-      // Met + AIC items
+      // Met + AIC items — collect into local array, no per-item state updates
       ...slice.map((item) =>
         fetchArtwork(item, 2, controller.signal).then((artwork) => {
           if (artwork && !controller.signal.aborted && isCollectionPiece(artwork)) {
-            setArtworks((prev) => [...prev, artwork]);
-            setPendingSkeletons((prev) => Math.max(0, prev - 1));
+            incoming.push(artwork);
           }
         })
       ),
-      // Europeana items (fetched in parallel with each batch)
+      // Europeana items
       fetchEuropeanaCollection(euroPage).then((items) => {
         if (controller.signal.aborted) return;
-        const filtered = items.filter(isCollectionPiece);
-        if (filtered.length > 0) {
-          setArtworks((prev) => [...prev, ...filtered]);
-          setPendingSkeletons((prev) => Math.max(0, prev - filtered.length));
-        }
+        incoming.push(...items.filter(isCollectionPiece));
       }),
     ]);
 
     if (!controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...incoming]);
       setCursor(start + slice.length);
       euroPageRef.current = euroPage + 1;
       setLoading(false);
