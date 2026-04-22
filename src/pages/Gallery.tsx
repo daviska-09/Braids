@@ -31,6 +31,11 @@ function matchesOrigins(art: Artwork, origins: string[]): boolean {
   });
 }
 
+// Resolves with null after ms if the promise hasn't settled yet,
+// so one slow/throttled fetch can't block the whole batch.
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([p, new Promise<null>((res) => setTimeout(() => res(null), ms))]);
+}
 
 async function fetchMixedTextileIds(): Promise<TaggedId[]> {
   const [metIds, aicIds] = await Promise.all([
@@ -120,14 +125,18 @@ const Gallery = () => {
       buffer.push(artwork);
     };
 
-    // All sources fire in parallel — no concurrency cap
+    // All sources fire in parallel. Each item is capped at 5 s so a single
+    // slow / rate-limited fetch can't stall the whole batch.
     await Promise.allSettled([
       ...slice.map((item) =>
-        fetchArtwork(item, 2, controller.signal).then(addItem)
+        withTimeout(fetchArtwork(item, 2, controller.signal), 5000).then(addItem)
       ),
-      fetchEuropeanaCollection(euroPage).then((items) => {
-        if (!controller.signal.aborted) items.forEach(addItem);
-      }),
+      withTimeout(
+        fetchEuropeanaCollection(euroPage).then((items) => {
+          if (!controller.signal.aborted) items.forEach(addItem);
+        }),
+        6000
+      ),
     ]);
 
     clearInterval(flushInterval);
