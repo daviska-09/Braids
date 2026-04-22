@@ -40,6 +40,18 @@ const EXCLUDED_DEPARTMENTS = ["paintings", "drawings and prints", "photographs",
 const EXCLUDED_CLASSIFICATIONS = ["painting", "drawing", "print", "photograph"];
 
 const objectCache = new Map<number, MetObject>();
+const SS_PREFIX = "met:";
+
+function ssGet(id: number): MetObject | null {
+  try {
+    const s = sessionStorage.getItem(SS_PREFIX + id);
+    return s ? (JSON.parse(s) as MetObject) : null;
+  } catch { return null; }
+}
+
+function ssSave(id: number, obj: MetObject) {
+  try { sessionStorage.setItem(SS_PREFIX + id, JSON.stringify(obj)); } catch { /* quota */ }
+}
 let cachedObjectIds: number[] | null = null;
 
 const SESSION_IDS_KEY = "met_textile_ids";
@@ -66,6 +78,8 @@ async function delay(ms: number) {
 
 export async function fetchObject(id: number, retries = 2, signal?: AbortSignal): Promise<MetObject | null> {
   if (objectCache.has(id)) return objectCache.get(id)!;
+  const cached = ssGet(id);
+  if (cached) { objectCache.set(id, cached); return cached; }
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (signal?.aborted) return null;
     try {
@@ -81,6 +95,7 @@ export async function fetchObject(id: number, retries = 2, signal?: AbortSignal)
       const cls = (obj.classification || "").toLowerCase();
       if (EXCLUDED_DEPARTMENTS.includes(dept) || EXCLUDED_CLASSIFICATIONS.some(ex => cls.includes(ex))) return null;
       objectCache.set(id, obj);
+      ssSave(id, obj);
       return obj;
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return null;
