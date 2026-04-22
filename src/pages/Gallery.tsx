@@ -11,7 +11,7 @@ import { X } from "lucide-react";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
 
-const BATCH_SIZE = 11;
+const BATCH_SIZE = 8;
 const EXPLORED_KEY = "reel_explored";
 const seenIds = new Set<string>(); // per-session dedup
 
@@ -74,6 +74,7 @@ const Gallery = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const prefetchAbortRef = useRef<AbortController | null>(null);
   const euroPageRef = useRef(1);
 
   // Deep-link: open artwork modal from ?artwork=ID (Met only)
@@ -101,8 +102,29 @@ const Gallery = () => {
     return () => { abortRef.current?.abort(); };
   }, [originsParam]);
 
+  // Fires the same fetches as loadBatch but never touches React state — its
+  // only purpose is to populate sessionStorage so the NEXT real loadBatch call
+  // returns from cache immediately.
+  const prefetchBatch = (ids: TaggedId[], start: number, euroPage: number) => {
+    if (start >= ids.length) return;
+    prefetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    prefetchAbortRef.current = controller;
+    const slice = ids.slice(start, start + BATCH_SIZE * 2);
+    Promise.allSettled([
+      ...slice.map((item) =>
+        withTimeout(fetchArtwork(item, 1, controller.signal), 3000)
+      ),
+      withTimeout(fetchEuropeanaCollection(euroPage), 6000),
+    ]);
+  };
+
   const loadBatch = async (ids: TaggedId[], start: number, euroPage: number) => {
     if (start >= ids.length) return;
+    // Cancel any in-flight prefetch — the real load takes priority on the
+    // same IDs; the prefetch controller being aborted is fine because
+    // sessionStorage writes already completed for items that finished.
+    prefetchAbortRef.current?.abort();
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -125,11 +147,11 @@ const Gallery = () => {
       buffer.push(artwork);
     };
 
-    // All sources fire in parallel. Each item is capped at 5 s so a single
-    // slow / rate-limited fetch can't stall the whole batch.
+    // All sources fire in parallel. retries=1 caps Met delay at 1s per item;
+    // combined with the 3s timeout this is more than sufficient headroom.
     await Promise.allSettled([
       ...slice.map((item) =>
-        withTimeout(fetchArtwork(item, 2, controller.signal), 5000).then(addItem)
+        withTimeout(fetchArtwork(item, 1, controller.signal), 3000).then(addItem)
       ),
       withTimeout(
         fetchEuropeanaCollection(euroPage).then((items) => {
@@ -151,6 +173,10 @@ const Gallery = () => {
       setLoading(false);
       setPendingSkeletons(0);
       loadingRef.current = false;
+
+      // Kick off background prefetch for the next batch so items land in
+      // sessionStorage before the user scrolls to trigger the real load.
+      prefetchBatch(ids, start + slice.length, euroPage + 1);
     }
   };
 
