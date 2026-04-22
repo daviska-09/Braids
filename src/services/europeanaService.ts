@@ -40,7 +40,37 @@ function mapToArtwork(item: Record<string, unknown>): Artwork | null {
   };
 }
 
-async function fetchEuropeana(query: string, page: number, irishOnly = false): Promise<Artwork[]> {
+function ssGetItem(id: string): Artwork | null {
+  try {
+    const s = sessionStorage.getItem("europeana:" + id);
+    return s ? (JSON.parse(s) as Artwork) : null;
+  } catch { return null; }
+}
+
+function ssSaveItem(artwork: Artwork) {
+  try { sessionStorage.setItem("europeana:" + artwork.id, JSON.stringify(artwork)); } catch { /* quota */ }
+}
+
+function ssGetPage(pageKey: string): Artwork[] | null {
+  try {
+    const raw = sessionStorage.getItem(pageKey);
+    if (!raw) return null;
+    const ids: string[] = JSON.parse(raw);
+    const items = ids.map(ssGetItem).filter((a): a is Artwork => a !== null);
+    return items.length === ids.length ? items : null;
+  } catch { return null; }
+}
+
+function ssSavePage(pageKey: string, artworks: Artwork[]) {
+  for (const a of artworks) ssSaveItem(a);
+  try { sessionStorage.setItem(pageKey, JSON.stringify(artworks.map((a) => a.id))); } catch { /* quota */ }
+}
+
+async function fetchEuropeana(query: string, page: number, irishOnly = false, cacheKey = "europeana:collection"): Promise<Artwork[]> {
+  const pageKey = `${cacheKey}:p${page}`;
+  const cached = ssGetPage(pageKey);
+  if (cached) return cached;
+
   const params = new URLSearchParams({
     wskey: API_KEY,
     query,
@@ -57,18 +87,25 @@ async function fetchEuropeana(query: string, page: number, irishOnly = false): P
     const res = await fetch(`${BASE}?${params}`);
     if (!res.ok) return [];
     const json = await res.json();
-    return ((json.items ?? []) as Record<string, unknown>[])
+    const artworks = ((json.items ?? []) as Record<string, unknown>[])
       .map(mapToArtwork)
       .filter((x): x is Artwork => x !== null);
+    ssSavePage(pageKey, artworks);
+    return artworks;
   } catch {
     return [];
   }
 }
 
 export function fetchEuropeanaCollection(page: number): Promise<Artwork[]> {
-  return fetchEuropeana(COLLECTION_QUERY, page);
+  return fetchEuropeana(COLLECTION_QUERY, page, false, "europeana:collection");
 }
 
 export function fetchEuropeanaLace(page: number, irishOnly: boolean): Promise<Artwork[]> {
-  return fetchEuropeana(irishOnly ? IRISH_LACE_QUERY : LACE_QUERY, page, irishOnly);
+  return fetchEuropeana(
+    irishOnly ? IRISH_LACE_QUERY : LACE_QUERY,
+    page,
+    irishOnly,
+    irishOnly ? "europeana:irishlace" : "europeana:lace"
+  );
 }

@@ -31,6 +31,21 @@ function matchesOrigins(art: Artwork, origins: string[]): boolean {
   });
 }
 
+// Simple concurrency limiter — tasks fire side effects, no return value needed
+async function fetchWithConcurrency(
+  tasks: Array<() => Promise<void>>,
+  limit: number
+): Promise<void> {
+  const queue = [...tasks];
+  async function worker(): Promise<void> {
+    while (queue.length > 0) {
+      const task = queue.shift()!;
+      try { await task(); } catch { /* discard individual failures */ }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
+}
+
 async function fetchMixedTextileIds(): Promise<TaggedId[]> {
   const [metIds, aicIds] = await Promise.all([
     fetchTextileObjectIds().then((ids) =>
@@ -47,7 +62,11 @@ async function fetchMixedTextileIds(): Promise<TaggedId[]> {
       })
       .catch(() => [] as TaggedId[]),
   ]);
-  return interleave(metIds, aicIds);
+  // First 4 positions are always Met — they resolve fastest from the local pool.
+  // AIC and Europeana fill positions 4+ interleaved as usual.
+  const firstFour = metIds.slice(0, 4);
+  const rest = interleave(metIds.slice(4), aicIds);
+  return [...firstFour, ...rest];
 }
 
 const Gallery = () => {
@@ -100,26 +119,36 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    const incoming: Artwork[] = [];
+    // Stream each card into the grid the moment it arrives
+    const addItem = (artwork: Artwork | null) => {
+      if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
+      setArtworks((prev) => [...prev, artwork]);
+    };
 
-    await Promise.all([
-      // Met + AIC items — collect into local array, no per-item state updates
-      ...slice.map((item) =>
-        fetchArtwork(item, 2, controller.signal).then((artwork) => {
-          if (artwork && !controller.signal.aborted && isCollectionPiece(artwork)) {
-            incoming.push(artwork);
-          }
-        })
+    const metSlice = slice.filter((item) => item.museum === "met");
+    const aicSlice = slice.filter((item) => item.museum === "aic");
+
+    // Met fetches are unlimited — local pool, resolves fastest
+    const metTasks = metSlice.map((item) => () =>
+      fetchArtwork(item, 2, controller.signal).then(addItem)
+    );
+
+    // AIC + Europeana capped at 3 concurrent to avoid thundering-herd throttling
+    const externalTasks: Array<() => Promise<void>> = [
+      ...aicSlice.map((item) => () =>
+        fetchArtwork(item, 2, controller.signal).then(addItem)
       ),
-      // Europeana items
-      fetchEuropeanaCollection(euroPage).then((items) => {
-        if (controller.signal.aborted) return;
-        incoming.push(...items.filter(isCollectionPiece));
+      () => fetchEuropeanaCollection(euroPage).then((items) => {
+        if (!controller.signal.aborted) items.forEach(addItem);
       }),
+    ];
+
+    await Promise.allSettled([
+      ...metTasks.map((t) => t()),
+      fetchWithConcurrency(externalTasks, 3),
     ]);
 
     if (!controller.signal.aborted) {
-      setArtworks((prev) => [...prev, ...incoming]);
       setCursor(start + slice.length);
       euroPageRef.current = euroPage + 1;
       setLoading(false);
@@ -201,7 +230,7 @@ const Gallery = () => {
             <div
               key={`sk-${i}`}
               className="mb-4 bg-muted animate-pulse rounded"
-              style={{ height: `${180 + (i * 53 % 180)}px` }}
+              style={{ height: "320px" }}
             />
           ))}
         </Masonry>

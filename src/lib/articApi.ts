@@ -55,12 +55,26 @@ export function articObjectToArtwork(obj: ArticObject): Artwork {
 }
 
 const objectCache = new Map<number, Artwork>();
+const SS_PREFIX = "aic:";
+
+function ssGet(id: number): Artwork | null {
+  try {
+    const s = sessionStorage.getItem(SS_PREFIX + id);
+    return s ? (JSON.parse(s) as Artwork) : null;
+  } catch { return null; }
+}
+
+function ssSave(id: number, artwork: Artwork) {
+  try { sessionStorage.setItem(SS_PREFIX + id, JSON.stringify(artwork)); } catch { /* quota */ }
+}
 
 export async function fetchArticObject(
   id: number,
   signal?: AbortSignal
 ): Promise<Artwork | null> {
   if (objectCache.has(id)) return objectCache.get(id)!;
+  const cached = ssGet(id);
+  if (cached) { objectCache.set(id, cached); return cached; }
   try {
     const res = await fetch(`${BASE}/artworks/${id}?fields=${FIELDS}`, { signal });
     if (!res.ok) return null;
@@ -68,6 +82,7 @@ export async function fetchArticObject(
     if (!data.image_id) return null;
     const artwork = articObjectToArtwork(data);
     objectCache.set(id, artwork);
+    ssSave(id, artwork);
     return artwork;
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") return null;
