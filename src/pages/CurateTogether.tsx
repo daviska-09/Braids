@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getActivities, onActivityChange, removeActivity, type ActivityEntry } from "@/lib/activityStore";
+import { getActivities, onActivityChange, removeActivity, updateNote, type ActivityEntry } from "@/lib/activityStore";
 import type { Artwork } from "@/lib/artwork";
 import ArtworkModal from "@/components/ArtworkModal";
 import { Link2, Mail, X } from "lucide-react";
@@ -101,6 +101,17 @@ const CurateTogether = () => {
                       )}
                     </p>
                     <p className="text-xs text-foreground/30 mt-1">{timeAgo(a.timestamp)}</p>
+                    <textarea
+                      defaultValue={a.note ?? ""}
+                      placeholder="Add a note..."
+                      rows={1}
+                      onClick={(e) => e.stopPropagation()}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.value.trim();
+                        if (val !== (a.note ?? "").trim()) updateNote(a.id, val);
+                      }}
+                      className="mt-2 w-full resize-none bg-transparent text-xs text-foreground/70 placeholder:text-foreground/25 outline-none border-none focus:ring-0 leading-relaxed"
+                    />
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); removeActivity(a.id); }}

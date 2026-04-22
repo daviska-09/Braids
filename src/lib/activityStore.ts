@@ -7,6 +7,7 @@ export interface ActivityEntry {
   action: "saved" | "sent";
   timestamp: number;
   recipientHint?: string;
+  note?: string;
 }
 
 const STORAGE_KEY = "curate-activity";
@@ -36,6 +37,14 @@ export function getActivities(): ActivityEntry[] {
   } catch {
     return [];
   }
+}
+
+export function updateNote(id: string, note: string) {
+  const activities = getActivities().map((a) =>
+    a.id === id ? { ...a, note } : a
+  );
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+  window.dispatchEvent(new Event(EVENT_NAME));
 }
 
 export function removeActivity(id: string) {
