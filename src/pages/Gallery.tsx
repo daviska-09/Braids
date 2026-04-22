@@ -31,20 +31,6 @@ function matchesOrigins(art: Artwork, origins: string[]): boolean {
   });
 }
 
-// Simple concurrency limiter — tasks fire side effects, no return value needed
-async function fetchWithConcurrency(
-  tasks: Array<() => Promise<void>>,
-  limit: number
-): Promise<void> {
-  const queue = [...tasks];
-  async function worker(): Promise<void> {
-    while (queue.length > 0) {
-      const task = queue.shift()!;
-      try { await task(); } catch { /* discard individual failures */ }
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
-}
 
 async function fetchMixedTextileIds(): Promise<TaggedId[]> {
   const [metIds, aicIds] = await Promise.all([
@@ -119,34 +105,37 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    // Stream each card into the grid the moment it arrives
-    const addItem = (artwork: Artwork | null) => {
-      if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
-      setArtworks((prev) => [...prev, artwork]);
+    // Collect incoming items and flush to state in small bursts every 200 ms.
+    // This keeps cards streaming in progressively without triggering a masonry
+    // re-layout on every single resolved fetch (22+ individual updates → ~3-4).
+    const buffer: Artwork[] = [];
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const flush = () => {
+      if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+      if (buffer.length === 0 || controller.signal.aborted) return;
+      const items = buffer.splice(0);
+      setArtworks((prev) => [...prev, ...items]);
     };
 
-    const metSlice = slice.filter((item) => item.museum === "met");
-    const aicSlice = slice.filter((item) => item.museum === "aic");
+    const addItem = (artwork: Artwork | null) => {
+      if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
+      buffer.push(artwork);
+      if (flushTimer) clearTimeout(flushTimer);
+      flushTimer = setTimeout(flush, 200);
+    };
 
-    // Met fetches are unlimited — local pool, resolves fastest
-    const metTasks = metSlice.map((item) => () =>
-      fetchArtwork(item, 2, controller.signal).then(addItem)
-    );
-
-    // AIC + Europeana capped at 3 concurrent to avoid thundering-herd throttling
-    const externalTasks: Array<() => Promise<void>> = [
-      ...aicSlice.map((item) => () =>
+    // All sources fire in parallel — no concurrency cap
+    await Promise.allSettled([
+      ...slice.map((item) =>
         fetchArtwork(item, 2, controller.signal).then(addItem)
       ),
-      () => fetchEuropeanaCollection(euroPage).then((items) => {
+      fetchEuropeanaCollection(euroPage).then((items) => {
         if (!controller.signal.aborted) items.forEach(addItem);
       }),
-    ];
-
-    await Promise.allSettled([
-      ...metTasks.map((t) => t()),
-      fetchWithConcurrency(externalTasks, 3),
     ]);
+
+    flush(); // drain anything still buffered after all promises settle
 
     if (!controller.signal.aborted) {
       setCursor(start + slice.length);
