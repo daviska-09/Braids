@@ -10,8 +10,11 @@ interface ArtworkCardProps {
 
 const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const placeholderPadding = useRef(`${100 + Math.random() * 60}%`);
+
+  if (failed) return null;
 
   return (
     <motion.div
@@ -31,7 +34,7 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
           src={artwork.imageSmall}
           alt={artwork.title}
           onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onError={() => setFailed(true)}
           className={`w-full block transition-transform duration-700 ease-out ${
             loaded ? "opacity-100" : "opacity-0 absolute inset-0"
           } ${hovered ? "scale-[1.03]" : "scale-100"}`}

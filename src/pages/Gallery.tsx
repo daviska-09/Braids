@@ -105,24 +105,19 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    // Collect incoming items and flush to state in small bursts every 200 ms.
-    // This keeps cards streaming in progressively without triggering a masonry
-    // re-layout on every single resolved fetch (22+ individual updates → ~3-4).
+    // Buffer incoming items and flush on a fixed 200ms throttle interval so
+    // cards stream into the grid steadily as they arrive — not as a debounce
+    // which would wait for a 200ms quiet gap (i.e. until the very last item).
     const buffer: Artwork[] = [];
-    let flushTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const flush = () => {
-      if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+    const flushInterval = setInterval(() => {
       if (buffer.length === 0 || controller.signal.aborted) return;
       const items = buffer.splice(0);
       setArtworks((prev) => [...prev, ...items]);
-    };
+    }, 200);
 
     const addItem = (artwork: Artwork | null) => {
       if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
       buffer.push(artwork);
-      if (flushTimer) clearTimeout(flushTimer);
-      flushTimer = setTimeout(flush, 200);
     };
 
     // All sources fire in parallel — no concurrency cap
@@ -135,7 +130,11 @@ const Gallery = () => {
       }),
     ]);
 
-    flush(); // drain anything still buffered after all promises settle
+    clearInterval(flushInterval);
+    // Final flush — drain anything buffered after the last interval tick
+    if (buffer.length > 0 && !controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...buffer.splice(0)]);
+    }
 
     if (!controller.signal.aborted) {
       setCursor(start + slice.length);
