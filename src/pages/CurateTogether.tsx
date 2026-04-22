@@ -18,27 +18,28 @@ function toArtwork(a: ActivityEntry): Artwork {
     id: a.artworkId,
     title: a.artworkTitle,
     artist: a.artworkArtist,
-    artistBio: "",
-    date: "",
-    culture: "",
-    country: "",
-    region: "",
+    artistBio: a.artworkArtistBio ?? "",
+    date: a.artworkDate ?? "",
+    culture: a.artworkCulture ?? "",
+    country: a.artworkCountry ?? "",
+    region: a.artworkRegion ?? "",
     artistNationality: "",
-    medium: "",
-    dimensions: "",
-    classification: "",
-    department: "",
-    credit: "",
+    medium: a.artworkMedium ?? "",
+    dimensions: a.artworkDimensions ?? "",
+    classification: a.artworkClassification ?? "",
+    department: a.artworkDepartment ?? "",
+    credit: a.artworkCredit ?? "",
     imageSmall: a.artworkImage,
     imageFull: a.artworkImage,
-    objectUrl: "",
-    museum: "",
+    objectUrl: a.artworkObjectUrl ?? "",
+    museum: a.artworkMuseum ?? "",
+    source: a.artworkSource,
   };
 }
 
 const CurateTogether = () => {
   const [activities, setActivities] = useState<ActivityEntry[]>(getActivities);
-  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<ActivityEntry | null>(null);
 
   useEffect(() => {
     const unsub = onActivityChange(() => setActivities(getActivities()));
@@ -74,7 +75,7 @@ const CurateTogether = () => {
               >
                 {/* CHANGE 3: open modal instead of navigating away */}
                 <div
-                  onClick={() => setSelectedArtwork(toArtwork(a))}
+                  onClick={() => setSelectedEntry(a)}
                   className="bg-card border border-border rounded overflow-hidden cursor-pointer hover:shadow-md transition-shadow group relative"
                 >
                   {a.artworkImage && (
@@ -127,7 +128,12 @@ const CurateTogether = () => {
         </div>
       )}
 
-      <ArtworkModal artwork={selectedArtwork} onClose={() => setSelectedArtwork(null)} />
+      <ArtworkModal
+        artwork={selectedEntry ? toArtwork(selectedEntry) : null}
+        onClose={() => setSelectedEntry(null)}
+        note={selectedEntry?.note}
+        onNoteChange={(val) => { if (selectedEntry) updateNote(selectedEntry.id, val); }}
+      />
     </div>
   );
 };

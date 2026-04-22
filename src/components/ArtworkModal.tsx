@@ -8,15 +8,20 @@ import { toast } from "sonner";
 interface ArtworkModalProps {
   artwork: Artwork | null;
   onClose: () => void;
+  note?: string;
+  onNoteChange?: (note: string) => void;
 }
 
-const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
+const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
   const [email, setEmail] = useState("");
   const [senderName, setSenderName] = useState("");
   const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.id) : false);
   const [imgSrc, setImgSrc] = useState(artwork?.imageSmall ?? "");
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [localNote, setLocalNote] = useState(note ?? "");
+
+  useEffect(() => { setLocalNote(note ?? ""); }, [note]);
 
   useEffect(() => {
     if (!artwork) return;
@@ -54,6 +59,19 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
       artworkArtist: artwork.artist,
       artworkImage: artwork.imageSmall || artwork.imageFull,
       action: "saved",
+      artworkArtistBio: artwork.artistBio,
+      artworkDate: artwork.date,
+      artworkMedium: artwork.medium,
+      artworkDimensions: artwork.dimensions,
+      artworkCulture: artwork.culture,
+      artworkCountry: artwork.country,
+      artworkRegion: artwork.region,
+      artworkClassification: artwork.classification,
+      artworkDepartment: artwork.department,
+      artworkCredit: artwork.credit,
+      artworkObjectUrl: artwork.objectUrl,
+      artworkMuseum: artwork.museum,
+      artworkSource: artwork.source,
     });
     setIsSaved(true);
     toast("Saved to collection");
@@ -74,6 +92,19 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
       artworkImage: artwork.imageSmall || artwork.imageFull,
       action: "sent",
       recipientHint: email.split("@")[0],
+      artworkArtistBio: artwork.artistBio,
+      artworkDate: artwork.date,
+      artworkMedium: artwork.medium,
+      artworkDimensions: artwork.dimensions,
+      artworkCulture: artwork.culture,
+      artworkCountry: artwork.country,
+      artworkRegion: artwork.region,
+      artworkClassification: artwork.classification,
+      artworkDepartment: artwork.department,
+      artworkCredit: artwork.credit,
+      artworkObjectUrl: artwork.objectUrl,
+      artworkMuseum: artwork.museum,
+      artworkSource: artwork.source,
     });
     toast("Postcard ready to send");
     setEmail("");
@@ -132,6 +163,20 @@ const ArtworkModal = ({ artwork, onClose }: ArtworkModalProps) => {
                 {artwork.department && <Detail label="Department" value={artwork.department} />}
                 {artwork.credit && <Detail label="Credit" value={artwork.credit} />}
               </div>
+
+              {onNoteChange && (
+                <textarea
+                  value={localNote}
+                  onChange={(e) => setLocalNote(e.target.value)}
+                  onBlur={(e) => {
+                    const val = e.currentTarget.value.trim();
+                    if (val !== (note ?? "").trim()) onNoteChange(val);
+                  }}
+                  placeholder="Add a note..."
+                  rows={2}
+                  className="mt-4 w-full resize-none bg-transparent text-xs text-foreground/70 placeholder:text-foreground/25 outline-none border-none focus:ring-0 leading-relaxed"
+                />
+              )}
 
               {/* Share actions */}
               <div className="mt-6 flex items-center gap-4 flex-wrap">

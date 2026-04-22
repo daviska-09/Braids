@@ -8,6 +8,20 @@ export interface ActivityEntry {
   timestamp: number;
   recipientHint?: string;
   note?: string;
+  // Full artwork metadata — optional for backward compat with existing stored items
+  artworkArtistBio?: string;
+  artworkDate?: string;
+  artworkMedium?: string;
+  artworkDimensions?: string;
+  artworkCulture?: string;
+  artworkCountry?: string;
+  artworkRegion?: string;
+  artworkClassification?: string;
+  artworkDepartment?: string;
+  artworkCredit?: string;
+  artworkObjectUrl?: string;
+  artworkMuseum?: string;
+  artworkSource?: "europeana";
 }
 
 const STORAGE_KEY = "curate-activity";
