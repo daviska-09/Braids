@@ -84,13 +84,10 @@
 /* react-masonry-css */
 .masonry-grid {
   display: flex;
-  gap: 1rem;
-  width: 100%;
+  margin-left: -1rem;
+  width: auto;
 }
 .masonry-grid-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-  min-width: 0;
+  padding-left: 1rem;
+  background-clip: padding-box;
 }

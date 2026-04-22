@@ -160,7 +160,7 @@ const LaceArchive = () => {
       (entries) => {
         if (entries[0].isIntersecting) loadMore();
       },
-      { rootMargin: "600px" }
+      { rootMargin: "2000px" }
     );
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();
