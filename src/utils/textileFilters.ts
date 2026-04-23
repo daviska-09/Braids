@@ -1,27 +1,17 @@
-import type { Artwork } from "@/lib/artwork";
+// ─── Textile filter predicates — compatibility re-exports ────────────────────
+// Single source of truth is src/utils/laceFilter.ts.
+// This file keeps the legacy export names so existing component imports
+// (Gallery.tsx, LaceArchive.tsx) continue to work without modification.
 
-export const LACE_KEYWORDS = [
-  "lace", "crochet", "needlepoint lace", "bobbin lace",
-  "needle lace", "tatting", "lacework", "punto in aria",
-  "reticella", "torchon", "chantilly", "valenciennes",
-  "bruges", "irish crochet",
-];
+import type { ArtworkObject } from "@/types/artwork";
+import { isLace, isCollection, LACE_KEYWORDS, COLLECTION_EXCLUDE_KEYWORDS } from "@/utils/laceFilter";
 
-export const COLLECTION_EXCLUDE_KEYWORDS = [
-  ...LACE_KEYWORDS,
-  "painting", "drawing", "print", "photograph",
-  "book", "manuscript", "poster", "lithograph",
-  "etching", "engraving", "woodcut",
-];
+export { LACE_KEYWORDS, COLLECTION_EXCLUDE_KEYWORDS };
 
-export function isLacePiece(item: Artwork): boolean {
-  const fields = [item.title, item.medium, item.classification]
-    .map((f) => (f || "").toLowerCase());
-  return LACE_KEYWORDS.some((kw) => fields.some((f) => f.includes(kw)));
+export function isLacePiece(item: ArtworkObject): boolean {
+  return isLace(item);
 }
 
-export function isCollectionPiece(item: Artwork): boolean {
-  const fields = [item.title, item.medium, item.classification]
-    .map((f) => (f || "").toLowerCase());
-  return !COLLECTION_EXCLUDE_KEYWORDS.some((kw) => fields.some((f) => f.includes(kw)));
+export function isCollectionPiece(item: ArtworkObject): boolean {
+  return isCollection(item);
 }

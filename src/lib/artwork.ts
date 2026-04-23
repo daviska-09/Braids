@@ -1,67 +1,61 @@
-import type { MetObject } from "./metApi";
-import { fetchObject } from "./metApi";
-import { fetchArticObject } from "./articApi";
+// ─── Shared artwork types and routing ────────────────────────────────────────
+// `Artwork` is now a type alias for the canonical `ArtworkObject` so that
+// existing component imports continue to work without modification.
 
-export interface Artwork {
-  id: string;
-  title: string;
-  artist: string;
-  artistBio: string;
-  date: string;
-  culture: string;
-  country: string;
-  region: string;
-  artistNationality: string;
-  medium: string;
-  dimensions: string;
-  classification: string;
-  department: string;
-  credit: string;
-  imageSmall: string;
-  imageFull: string;
-  objectUrl: string;
-  museum: string;
-  source?: "europeana";
+import { type ArtworkObject, type MetObject, adaptMetObject } from "@/types/artwork";
+import { getMetObject } from "@/services/metService";
+import { getAICObject } from "@/services/aicService";
+
+// Re-export the canonical type under the legacy name so TSX imports stay valid.
+export type Artwork = ArtworkObject;
+
+// Re-export MetObject for callers that still reference it via this module.
+export type { MetObject };
+
+// ─── Adapter (kept for Gallery.tsx deep-link: fromMetObject(obj)) ─────────────
+export function fromMetObject(obj: MetObject): ArtworkObject {
+  return (
+    adaptMetObject(obj) ?? {
+      id: String(obj.objectID),
+      source: "met" as const,
+      title: obj.title || "",
+      artist: obj.artistDisplayName || "",
+      artistBio: obj.artistDisplayBio || "",
+      date: obj.objectDate || "",
+      culture: obj.culture || "",
+      country: obj.country || "",
+      region: obj.region || "",
+      artistNationality: obj.artistNationality || "",
+      medium: obj.medium || "",
+      dimensions: obj.dimensions || "",
+      classification: obj.classification || "",
+      department: obj.department || "",
+      credit: obj.creditLine || "",
+      imageSmall: obj.primaryImageSmall || "",
+      imageFull: obj.primaryImage || "",
+      objectUrl: obj.objectURL || "",
+      museum: "The Metropolitan Museum of Art",
+      tags: obj.tags ? obj.tags.map((t) => t.term) : [],
+    }
+  );
 }
 
-export function fromMetObject(obj: MetObject): Artwork {
-  return {
-    id: String(obj.objectID),
-    title: obj.title || "",
-    artist: obj.artistDisplayName || "",
-    artistBio: obj.artistDisplayBio || "",
-    date: obj.objectDate || "",
-    culture: obj.culture || "",
-    country: obj.country || "",
-    region: obj.region || "",
-    artistNationality: obj.artistNationality || "",
-    medium: obj.medium || "",
-    dimensions: obj.dimensions || "",
-    classification: obj.classification || "",
-    department: obj.department || "",
-    credit: obj.creditLine || "",
-    imageSmall: obj.primaryImageSmall,
-    imageFull: obj.primaryImage,
-    objectUrl: obj.objectURL,
-    museum: "The Metropolitan Museum of Art",
-  };
-}
-
+// ─── TaggedId — identifies an artwork by museum source ───────────────────────
 export type TaggedId = { id: number; museum: "met" | "aic" };
 
+// ─── fetchArtwork — main dispatch used by Gallery and LaceArchive ─────────────
 export async function fetchArtwork(
   item: TaggedId,
-  retries: number,
+  _retries: number,
   signal: AbortSignal
-): Promise<Artwork | null> {
+): Promise<ArtworkObject | null> {
   if (item.museum === "aic") {
-    return fetchArticObject(item.id, signal);
+    return getAICObject(item.id, signal);
   }
-  const obj = await fetchObject(item.id, retries, signal);
-  return obj ? fromMetObject(obj) : null;
+  return getMetObject(item.id, signal);
 }
 
-/** Distributes secondary items evenly throughout primary, preserving order of both. */
+// ─── interleave — distributes secondary items evenly through primary ──────────
 export function interleave<T>(primary: T[], secondary: T[]): T[] {
   if (secondary.length === 0) return primary;
   const result: T[] = [];

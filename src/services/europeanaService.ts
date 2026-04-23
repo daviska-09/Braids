@@ -1,7 +1,11 @@
-import type { Artwork } from "@/lib/artwork";
+import { type ArtworkObject, adaptEuropeanaItem } from "@/types/artwork";
+import { cacheGet, cacheSet } from "@/utils/artworkCache";
 
 const BASE = "https://api.europeana.eu/record/v2/search.json";
 const API_KEY = import.meta.env.VITE_EUROPEANA_API_KEY as string;
+
+// Europeana handles more parallel connections than Met
+const EUROPEANA_ROWS = 9;
 
 const COLLECTION_QUERY =
   "(textile OR weaving OR tapestry OR embroidery OR costume OR fabric OR silk OR wool OR carpet OR brocade) AND NOT (lace OR crochet)";
@@ -9,64 +13,50 @@ const COLLECTION_QUERY =
 const LACE_QUERY =
   'lace OR crochet OR needlework OR "bobbin lace" OR "needle lace" OR tatting OR lacework OR "Irish crochet"';
 
-// When irishOnly — lead with explicit Irish lace terms so relevance is higher,
-// then fall back to general lace terms filtered by COUNTRY:ireland
 const IRISH_LACE_QUERY =
   '"irish lace" OR "irish crochet" OR "Carrickmacross" OR "Limerick lace" OR "Kenmare lace" OR lace OR crochet OR tatting OR lacework';
 
-function mapToArtwork(item: Record<string, unknown>): Artwork | null {
-  const imageSmall = (item.edmPreview as string[] | undefined)?.[0] ?? "";
-  if (!imageSmall) return null;
-  return {
-    id: String(item.id ?? ""),
-    title: (item.title as string[] | undefined)?.[0] ?? "",
-    artist: (item.dcCreator as string[] | undefined)?.[0] ?? "",
-    artistBio: "",
-    date: (item.year as string[] | undefined)?.[0] ?? "",
-    culture: (item.country as string[] | undefined)?.[0] ?? "",
-    country: (item.country as string[] | undefined)?.[0] ?? "",
-    region: "",
-    artistNationality: "",
-    medium: (item.dcFormat as string[] | undefined)?.[0] ?? "",
-    dimensions: "",
-    classification: "",
-    department: "",
-    credit: "",
-    imageSmall,
-    imageFull: imageSmall,
-    objectUrl: String(item.guid ?? ""),
-    museum: (item.dataProvider as string[] | undefined)?.[0] ?? "Europeana",
-    source: "europeana",
-  };
-}
+// ─── Caching ─────────────────────────────────────────────────────────────────
+// Individual items go into the shared LRU cache.
+// Page-level index (array of IDs) stays in sessionStorage so it survives
+// component unmounts without polluting localStorage with ephemeral page state.
 
-function ssGetItem(id: string): Artwork | null {
-  try {
-    const s = sessionStorage.getItem("europeana:" + id);
-    return s ? (JSON.parse(s) as Artwork) : null;
-  } catch { return null; }
-}
-
-function ssSaveItem(artwork: Artwork) {
-  try { sessionStorage.setItem("europeana:" + artwork.id, JSON.stringify(artwork)); } catch { /* quota */ }
-}
-
-function ssGetPage(pageKey: string): Artwork[] | null {
+function ssGetPage(pageKey: string): ArtworkObject[] | null {
   try {
     const raw = sessionStorage.getItem(pageKey);
     if (!raw) return null;
-    const ids: string[] = JSON.parse(raw);
-    const items = ids.map(ssGetItem).filter((a): a is Artwork => a !== null);
-    return items.length === ids.length ? items : null;
+    const ids = JSON.parse(raw) as string[];
+    const items = ids.map((id) => cacheGet(`europeana:${id}`));
+    return items.every((x): x is ArtworkObject => x !== null) ? items : null;
   } catch { return null; }
 }
 
-function ssSavePage(pageKey: string, artworks: Artwork[]) {
-  for (const a of artworks) ssSaveItem(a);
-  try { sessionStorage.setItem(pageKey, JSON.stringify(artworks.map((a) => a.id))); } catch { /* quota */ }
+function ssSavePage(pageKey: string, artworks: ArtworkObject[]): void {
+  for (const a of artworks) cacheSet(`europeana:${a.id}`, a);
+  try {
+    sessionStorage.setItem(pageKey, JSON.stringify(artworks.map((a) => a.id)));
+  } catch { /* quota */ }
 }
 
-async function fetchEuropeana(query: string, page: number, irishOnly = false, cacheKey = "europeana:collection"): Promise<Artwork[]> {
+// ─── Error handling ───────────────────────────────────────────────────────────
+
+function jitter(base: number): number {
+  return base + Math.random() * base * 0.5;
+}
+
+async function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// ─── Core fetch ───────────────────────────────────────────────────────────────
+
+async function fetchEuropeana(
+  query: string,
+  page: number,
+  irishOnly: boolean,
+  cacheKey: string,
+  signal?: AbortSignal
+): Promise<ArtworkObject[]> {
   const pageKey = `${cacheKey}:p${page}`;
   const cached = ssGetPage(pageKey);
   if (cached) return cached;
@@ -74,8 +64,8 @@ async function fetchEuropeana(query: string, page: number, irishOnly = false, ca
   const params = new URLSearchParams({
     wskey: API_KEY,
     query,
-    rows: "9",
-    start: String((page - 1) * 9 + 1),
+    rows: String(EUROPEANA_ROWS),
+    start: String((page - 1) * EUROPEANA_ROWS + 1),
     profile: "rich",
   });
   params.append("qf", "TYPE:IMAGE");
@@ -83,29 +73,65 @@ async function fetchEuropeana(query: string, page: number, irishOnly = false, ca
   params.append("reusability", "permission");
   if (irishOnly) params.append("qf", "COUNTRY:ireland");
 
-  try {
-    const res = await fetch(`${BASE}?${params}`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    const artworks = ((json.items ?? []) as Record<string, unknown>[])
-      .map(mapToArtwork)
-      .filter((x): x is Artwork => x !== null);
-    ssSavePage(pageKey, artworks);
-    return artworks;
-  } catch {
-    return [];
+  const MAX_RETRIES = 3;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (signal?.aborted) return [];
+    try {
+      const res = await fetch(`${BASE}?${params}`, { signal });
+
+      if (res.status === 404) return [];
+
+      if (res.status === 429) {
+        if (attempt < MAX_RETRIES) {
+          await delay(Math.min(jitter(1000 * Math.pow(2, attempt)), 10000));
+          continue;
+        }
+        return [];
+      }
+
+      if (res.status >= 500) {
+        console.error("[europeanaService] server error", { source: "europeana", page, status: res.status });
+        if (attempt < MAX_RETRIES) {
+          await delay(jitter(1000));
+          continue;
+        }
+        return [];
+      }
+
+      if (!res.ok) return [];
+
+      const json = await res.json() as { items?: Record<string, unknown>[] };
+      const artworks = (json.items ?? [])
+        .map(adaptEuropeanaItem)
+        .filter((x): x is ArtworkObject => x !== null);
+
+      ssSavePage(pageKey, artworks);
+      return artworks;
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return [];
+      if (attempt < MAX_RETRIES) {
+        await delay(jitter(800));
+        continue;
+      }
+      return [];
+    }
   }
+  return [];
 }
 
-export function fetchEuropeanaCollection(page: number): Promise<Artwork[]> {
-  return fetchEuropeana(COLLECTION_QUERY, page, false, "europeana:collection");
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export function fetchEuropeanaCollection(page: number, signal?: AbortSignal): Promise<ArtworkObject[]> {
+  return fetchEuropeana(COLLECTION_QUERY, page, false, "europeana:collection", signal);
 }
 
-export function fetchEuropeanaLace(page: number, irishOnly: boolean): Promise<Artwork[]> {
+export function fetchEuropeanaLace(page: number, irishOnly: boolean, signal?: AbortSignal): Promise<ArtworkObject[]> {
   return fetchEuropeana(
     irishOnly ? IRISH_LACE_QUERY : LACE_QUERY,
     page,
     irishOnly,
-    irishOnly ? "europeana:irishlace" : "europeana:lace"
+    irishOnly ? "europeana:irishlace" : "europeana:lace",
+    signal
   );
 }
