@@ -24,6 +24,13 @@ export function recordExplored(id: string): void {
 }
 
 /**
+ * Resets the global Supabase counter to 0.
+ */
+export async function resetGlobalExploredCount(): Promise<void> {
+  await supabase.rpc("reset_explored");
+}
+
+/**
  * Returns the global explored count from Supabase.
  * Falls back to 0 on any error.
  */

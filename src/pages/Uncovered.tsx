@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { EXPLORED_KEY, getGlobalExploredCount } from "@/lib/exploredCounter";
+import { EXPLORED_KEY, getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
 
 // ── Hidden for redesign — do not delete ──
 // import { useMemo } from "react";
@@ -150,7 +150,9 @@ const Uncovered = () => {
   const handleResetSubmit = () => {
     if (resetVal === "reelmuseum") {
       setExplored(0);
+      setGlobalExplored(0);
       localStorage.setItem(EXPLORED_KEY, "0");
+      resetGlobalExploredCount();
     }
     setResetOpen(false);
     setResetVal("");
