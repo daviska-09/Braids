@@ -106,6 +106,12 @@ async function fetchEuropeana(
         .map(adaptEuropeanaItem)
         .filter((x): x is ArtworkObject => x !== null);
 
+      // Shuffle so results don't always appear in Europeana's default collection order
+      for (let i = artworks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [artworks[i], artworks[j]] = [artworks[j], artworks[i]];
+      }
+
       ssSavePage(pageKey, artworks);
       return artworks;
     } catch (err) {
