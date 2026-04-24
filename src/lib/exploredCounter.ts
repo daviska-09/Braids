@@ -20,7 +20,9 @@ export function recordExplored(id: string): void {
   const current = Number(localStorage.getItem(EXPLORED_KEY) ?? "0");
   localStorage.setItem(EXPLORED_KEY, String(current + 1));
 
-  supabase.rpc("increment_explored").catch(() => { /* network failure — ignore */ });
+  supabase.rpc("increment_explored").then(
+    ({ error }) => { if (error) console.warn("[explored] increment failed", error); }
+  );
 }
 
 /**
