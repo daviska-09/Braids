@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getActivities, onActivityChange, removeActivity, updateNote, type ActivityEntry } from "@/lib/activityStore";
+import { getActivities, onActivityChange, removeActivity, updateNote, hydrateFromSupabase, type ActivityEntry } from "@/lib/activityStore";
 import type { Artwork } from "@/lib/artwork";
 import ArtworkModal from "@/components/ArtworkModal";
 import { Link2, Mail, X } from "lucide-react";
@@ -42,6 +42,7 @@ const CurateTogether = () => {
   const [selectedEntry, setSelectedEntry] = useState<ActivityEntry | null>(null);
 
   useEffect(() => {
+    hydrateFromSupabase(); // merge Supabase data into localStorage on mount
     const unsub = onActivityChange(() => setActivities(getActivities()));
     return unsub;
   }, []);
