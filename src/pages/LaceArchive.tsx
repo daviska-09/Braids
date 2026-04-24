@@ -5,18 +5,10 @@ import { isLacePiece } from "@/utils/textileFilters";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import Masonry from "react-masonry-css";
+import { recordExplored } from "@/lib/exploredCounter";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
 const BATCH_SIZE = 11;
-const EXPLORED_KEY = "reel_explored";
-const seenIds = new Set<string>(); // per-session dedup
-
-function recordExplored(id: string) {
-  if (seenIds.has(id)) return;
-  seenIds.add(id);
-  const current = Number(localStorage.getItem(EXPLORED_KEY) ?? "0");
-  localStorage.setItem(EXPLORED_KEY, String(current + 1));
-}
 const SESSION_LACE_IDS_KEY = "met_lace_ids_v2";
 const SESSION_IRISH_LACE_IDS_KEY = "met_irish_lace_ids_v1";
 const SESSION_AIC_LACE_IDS_KEY = "aic_lace_ids_v2";

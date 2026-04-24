@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { EXPLORED_KEY, getGlobalExploredCount } from "@/lib/exploredCounter";
 
 // ── Hidden for redesign — do not delete ──
 // import { useMemo } from "react";
@@ -8,7 +9,6 @@ import { useState, useEffect, useRef } from "react";
 // import MapFoldAnimation from "@/components/MapFoldAnimation";
 // import { fetchTextileObjectIds } from "@/lib/metApi";
 
-const EXPLORED_KEY = "reel_explored";
 const TOTAL_CACHE_KEY = "reel_total_combined";
 const TOTAL_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -49,6 +49,7 @@ const Uncovered = () => {
   const [totalIds, setTotalIds]               = useState<number | null>(null);
   const [explored, setExplored]               = useState(0);
   const [displayExplored, setDisplayExplored] = useState(0);
+  const [globalExplored, setGlobalExplored]   = useState<number | null>(null);
   const [resetOpen, setResetOpen]             = useState(false);
   const [resetVal, setResetVal]               = useState("");
   const prevExploredRef = useRef(0);
@@ -88,6 +89,11 @@ const Uncovered = () => {
           setExplored(seed);
         }
       });
+  }, []);
+
+  // Fetch global counter from Supabase once on mount
+  useEffect(() => {
+    getGlobalExploredCount().then(setGlobalExplored);
   }, []);
 
   // Poll localStorage every 2s so counter updates while user browses collection
@@ -174,6 +180,14 @@ const Uncovered = () => {
             </>
           )}
         </p>
+        {globalExplored !== null && (
+          <p className="text-sm text-muted-foreground mb-6">
+            <span className="font-medium" style={{ color: "#3AACAC" }}>
+              {globalExplored.toLocaleString()}
+            </span>
+            {" "}explored by all visitors
+          </p>
+        )}
         <p className="text-sm text-muted-foreground leading-relaxed mb-10">
           through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
         </p>

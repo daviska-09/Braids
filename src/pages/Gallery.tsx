@@ -8,19 +8,11 @@ import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import Masonry from "react-masonry-css";
 import { X } from "lucide-react";
+import { recordExplored } from "@/lib/exploredCounter";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
 
 const BATCH_SIZE = 8;
-const EXPLORED_KEY = "reel_explored";
-const seenIds = new Set<string>(); // per-session dedup
-
-function recordExplored(id: string) {
-  if (seenIds.has(id)) return;
-  seenIds.add(id);
-  const current = Number(localStorage.getItem(EXPLORED_KEY) ?? "0");
-  localStorage.setItem(EXPLORED_KEY, String(current + 1));
-}
 
 function matchesOrigins(art: Artwork, origins: string[]): boolean {
   const fields = [art.artistNationality, art.country, art.culture, art.region]
