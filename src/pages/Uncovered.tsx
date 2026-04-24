@@ -170,7 +170,7 @@ const Uncovered = () => {
           ) : (
             <>
               <span className="font-medium" style={{ color: "#3AACAC" }}>
-                {displayExplored.toLocaleString()}
+                {(globalExplored ?? displayExplored).toLocaleString()}
               </span>
               {" "}objects explored out of{" "}
               <span className="font-medium" style={{ color: "#3AACAC" }}>
@@ -180,14 +180,6 @@ const Uncovered = () => {
             </>
           )}
         </p>
-        {globalExplored !== null && (
-          <p className="text-sm text-muted-foreground mb-6">
-            <span className="font-medium" style={{ color: "#3AACAC" }}>
-              {globalExplored.toLocaleString()}
-            </span>
-            {" "}explored by all visitors
-          </p>
-        )}
         <p className="text-sm text-muted-foreground leading-relaxed mb-10">
           through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
         </p>
