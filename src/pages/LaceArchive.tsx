@@ -9,6 +9,10 @@ import { recordExplored } from "@/lib/exploredCounter";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
 const BATCH_SIZE = 11;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([p, new Promise<null>((res) => setTimeout(() => res(null), ms))]);
+}
 const SESSION_LACE_IDS_KEY = "met_lace_ids_v2";
 const SESSION_IRISH_LACE_IDS_KEY = "met_irish_lace_ids_v1";
 const SESSION_AIC_LACE_IDS_KEY = "aic_lace_ids_v2";
@@ -107,29 +111,42 @@ const LaceArchive = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    const incoming: Artwork[] = [];
+    const buffer: Artwork[] = [];
+    const flushInterval = setInterval(() => {
+      if (buffer.length === 0 || controller.signal.aborted) return;
+      const items = buffer.splice(0);
+      setArtworks((prev) => [...prev, ...items]);
+    }, 200);
 
-    await Promise.all([
+    const addItem = (artwork: Artwork | null) => {
+      if (!artwork || controller.signal.aborted) return;
+      const passes =
+        isLacePiece(artwork) &&
+        (!irish || artwork.museum === "The Metropolitan Museum of Art" || isIrishPiece(artwork));
+      if (passes) buffer.push(artwork);
+    };
+
+    await Promise.allSettled([
       // Met items when irish=true are from irish-lace-ids.json — pre-filtered, always pass
       // AIC items when irish=true are filtered by isIrishPiece at runtime
       ...slice.map((item) =>
-        fetchArtwork(item, 2, controller.signal).then((artwork) => {
-          if (!artwork || controller.signal.aborted) return;
-          const passes =
-            isLacePiece(artwork) &&
-            (!irish || item.museum === "met" || isIrishPiece(artwork));
-          if (passes) incoming.push(artwork);
-        })
+        withTimeout(fetchArtwork(item, 1, controller.signal), 3000).then(addItem)
       ),
       // Europeana — already scoped by COUNTRY:ireland + Irish lace query when irish=true
-      fetchEuropeanaLace(euroPage, irish).then((items) => {
-        if (controller.signal.aborted) return;
-        incoming.push(...items.filter(isLacePiece));
-      }),
+      withTimeout(
+        fetchEuropeanaLace(euroPage, irish).then((items) => {
+          if (!controller.signal.aborted) items.forEach((a) => addItem(a));
+        }),
+        6000
+      ),
     ]);
 
+    clearInterval(flushInterval);
+    if (buffer.length > 0 && !controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...buffer.splice(0)]);
+    }
+
     if (!controller.signal.aborted) {
-      setArtworks((prev) => [...prev, ...incoming]);
       setCursor(start + slice.length);
       euroPageRef.current = euroPage + 1;
       setLoading(false);
