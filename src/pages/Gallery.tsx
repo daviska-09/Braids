@@ -128,6 +128,7 @@ const Gallery = () => {
     // cards stream into the grid steadily as they arrive — not as a debounce
     // which would wait for a 200ms quiet gap (i.e. until the very last item).
     const buffer: Artwork[] = [];
+    const euroBuffer: Artwork[] = [];
     const flushInterval = setInterval(() => {
       if (buffer.length === 0 || controller.signal.aborted) return;
       const items = buffer.splice(0);
@@ -147,16 +148,23 @@ const Gallery = () => {
       ),
       withTimeout(
         fetchEuropeanaCollection(euroPage).then((items) => {
-          if (!controller.signal.aborted) items.forEach(addItem);
+          if (!controller.signal.aborted)
+            items.filter(isCollectionPiece).forEach((a) => euroBuffer.push(a));
         }),
         6000
       ),
     ]);
 
     clearInterval(flushInterval);
-    // Final flush — drain anything buffered after the last interval tick
-    if (buffer.length > 0 && !controller.signal.aborted) {
-      setArtworks((prev) => [...prev, ...buffer.splice(0)]);
+    // Shuffle remaining Met/AIC items together with Europeana items so all
+    // sources appear visually mixed rather than source-grouped in each batch.
+    const finalBatch = [...buffer.splice(0), ...euroBuffer];
+    for (let i = finalBatch.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [finalBatch[i], finalBatch[j]] = [finalBatch[j], finalBatch[i]];
+    }
+    if (finalBatch.length > 0 && !controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...finalBatch]);
     }
 
     if (!controller.signal.aborted) {

@@ -112,6 +112,7 @@ const LaceArchive = () => {
     setPendingSkeletons(BATCH_SIZE);
 
     const buffer: Artwork[] = [];
+    const euroBuffer: Artwork[] = [];
     const flushInterval = setInterval(() => {
       if (buffer.length === 0 || controller.signal.aborted) return;
       const items = buffer.splice(0);
@@ -135,15 +136,23 @@ const LaceArchive = () => {
       // Europeana — already scoped by COUNTRY:ireland + Irish lace query when irish=true
       withTimeout(
         fetchEuropeanaLace(euroPage, irish).then((items) => {
-          if (!controller.signal.aborted) items.forEach((a) => addItem(a));
+          if (!controller.signal.aborted)
+            items.filter(isLacePiece).forEach((a) => euroBuffer.push(a));
         }),
         6000
       ),
     ]);
 
     clearInterval(flushInterval);
-    if (buffer.length > 0 && !controller.signal.aborted) {
-      setArtworks((prev) => [...prev, ...buffer.splice(0)]);
+    // Shuffle remaining Met/AIC items together with Europeana items so all
+    // sources appear visually mixed rather than source-grouped in each batch.
+    const finalBatch = [...buffer.splice(0), ...euroBuffer];
+    for (let i = finalBatch.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [finalBatch[i], finalBatch[j]] = [finalBatch[j], finalBatch[i]];
+    }
+    if (finalBatch.length > 0 && !controller.signal.aborted) {
+      setArtworks((prev) => [...prev, ...finalBatch]);
     }
 
     if (!controller.signal.aborted) {
