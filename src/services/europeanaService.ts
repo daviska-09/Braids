@@ -27,7 +27,14 @@ function ssGetPage(pageKey: string): ArtworkObject[] | null {
     if (!raw) return null;
     const ids = JSON.parse(raw) as string[];
     const items = ids.map((id) => cacheGet(`europeana:${id}`));
-    return items.every((x): x is ArtworkObject => x !== null) ? items : null;
+    if (!items.every((x): x is ArtworkObject => x !== null)) return null;
+    // Re-shuffle on every cache read so repeated loads within the same session
+    // don't always show the same fixed order.
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items as ArtworkObject[];
   } catch { return null; }
 }
 
