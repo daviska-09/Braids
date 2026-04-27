@@ -33,6 +33,26 @@ const MAX_ACTIVITIES = 100;
 
 // ─── localStorage helpers ────────────────────────────────────────────────────
 
+// Only persist the fields needed to render cards. Full metadata lives in
+// Supabase and is restored when hydrateFromSupabase runs on mount.
+function slimEntry(e: ActivityEntry): ActivityEntry {
+  return {
+    id: e.id,
+    artworkId: e.artworkId,
+    artworkTitle: e.artworkTitle,
+    artworkArtist: e.artworkArtist,
+    artworkImage: e.artworkImage,
+    action: e.action,
+    timestamp: e.timestamp,
+    recipientHint: e.recipientHint,
+    note: e.note,
+    artworkDate: e.artworkDate,
+    artworkSource: e.artworkSource,
+    artworkMuseum: e.artworkMuseum,
+    artworkObjectUrl: e.artworkObjectUrl,
+  };
+}
+
 export function getActivities(): ActivityEntry[] {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -42,11 +62,14 @@ export function getActivities(): ActivityEntry[] {
 }
 
 function saveActivities(activities: ActivityEntry[]) {
+  const slim = activities.map(slimEntry);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-    console.log("[activityStore] saved to localStorage:", activities.length, "items");
-  } catch (e) {
-    console.error("[activityStore] localStorage write FAILED:", e);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+  } catch {
+    // Quota still exceeded even with slim data — drop oldest half and retry
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(slim.slice(0, Math.ceil(slim.length / 2))));
+    } catch { /* give up on localStorage — Supabase still has everything */ }
   }
   window.dispatchEvent(new Event(EVENT_NAME));
 }
@@ -121,10 +144,7 @@ export async function hydrateFromSupabase(): Promise<void> {
       .eq("user_id", getUserId())
       .order("timestamp", { ascending: false });
 
-    if (error) { console.warn("[activityStore] Supabase SELECT error:", error); return; }
-    if (!data) { console.warn("[activityStore] Supabase returned null data"); return; }
-
-    console.log("[activityStore] Supabase returned", data.length, "items");
+    if (error || !data) return;
     const remote = data.map(fromRow);
     const local = getActivities();
 
@@ -156,15 +176,12 @@ export function addActivity(entry: Omit<ActivityEntry, "id" | "timestamp">) {
   if (activities.length > MAX_ACTIVITIES) activities.length = MAX_ACTIVITIES;
   saveActivities(activities);
 
-  console.log("[activityStore] addActivity called, total now:", activities.length);
-
-  // Sync to Supabase in the background
+  // Sync to Supabase in the background (full metadata)
   supabase
     .from("saved_items")
     .insert(toRow(newEntry))
     .then(({ error }) => {
       if (error) console.warn("[activityStore] Supabase insert failed:", error);
-      else console.log("[activityStore] Supabase insert OK");
     });
 }
 
