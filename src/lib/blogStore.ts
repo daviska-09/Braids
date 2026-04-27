@@ -39,7 +39,15 @@ function readPosts(): BlogPost[] {
 }
 
 function writePosts(posts: BlogPost[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+  } catch {
+    // Quota exceeded — evict the ephemeral artwork cache (safe to lose) and retry
+    try {
+      localStorage.removeItem("reel_cache_v1");
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+    } catch { /* still can't write */ }
+  }
 }
 
 export function getPosts(): BlogPost[] {

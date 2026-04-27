@@ -5,7 +5,7 @@ import { type ArtworkObject, CACHE_VERSION } from "@/types/artwork";
 // on every get we delete + re-insert the entry (moves it to the "newest" end),
 // on overflow we delete the first (oldest) entry.
 
-const MAX_ENTRIES = 500;
+const MAX_ENTRIES = 150;
 const LS_KEY = "reel_cache_v1";
 const LS_VERSION_KEY = "reel_cache_version";
 
