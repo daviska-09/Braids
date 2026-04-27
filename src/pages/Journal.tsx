@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import FloatingFooter from "@/components/FloatingFooter";
 import { getPosts, addPost, updatePost, deletePost, isAdmin, toggleAdmin, initPosts, exportPostsJson, type BlogPost } from "@/lib/blogStore";
 import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,7 @@ const Journal = () => {
           />
         </DialogContent>
       </Dialog>
+      <FloatingFooter />
     </div>
   );
 };

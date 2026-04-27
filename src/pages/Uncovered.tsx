@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import FloatingFooter from "@/components/FloatingFooter";
 import { EXPLORED_KEY, getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
 
 // ── Hidden for redesign — do not delete ──
@@ -245,6 +246,8 @@ const Uncovered = () => {
         )}
 
       ── END HIDDEN ── */}
+
+      <FloatingFooter />
 
       <div className="fixed bottom-4 right-4 flex items-center gap-2">
         {resetOpen && (
