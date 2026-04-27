@@ -38,7 +38,7 @@ const Header = () => {
           saved
           </NavLink>
           <NavLink
-            to="/journal"
+            to="/field-notes"
             className={({ isActive }) =>
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
             }
