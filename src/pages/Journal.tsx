@@ -12,6 +12,8 @@ const Journal = () => {
   const [editing, setEditing] = useState<BlogPost | null>(null);
   const [creating, setCreating] = useState(false);
 
+  useEffect(() => { document.title = "Field Notes | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
+
   useEffect(() => {
     initPosts().then(refresh);
   }, []);

@@ -41,6 +41,8 @@ const CurateTogether = () => {
   const [activities, setActivities] = useState<ActivityEntry[]>(getActivities);
   const [selectedEntry, setSelectedEntry] = useState<ActivityEntry | null>(null);
 
+  useEffect(() => { document.title = "Saved | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
+
   useEffect(() => {
     hydrateFromSupabase(); // merge Supabase data into localStorage on mount
     const unsub = onActivityChange(() => setActivities(getActivities()));

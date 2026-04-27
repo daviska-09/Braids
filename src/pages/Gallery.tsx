@@ -69,6 +69,8 @@ const Gallery = () => {
   const prefetchAbortRef = useRef<AbortController | null>(null);
   const euroPageRef = useRef(1);
 
+  useEffect(() => { document.title = "Main Archive | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
+
   // Deep-link: open artwork modal from ?artwork=ID (Met only)
   useEffect(() => {
     const artworkId = searchParams.get("artwork");

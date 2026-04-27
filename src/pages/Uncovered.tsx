@@ -78,6 +78,8 @@ const Uncovered = () => {
   //   });
   // }, []);
 
+  useEffect(() => { document.title = "Explored | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
+
   // Fetch combined total from all sources; seed explored on first visit
   useEffect(() => {
     fetchCombinedTotal()

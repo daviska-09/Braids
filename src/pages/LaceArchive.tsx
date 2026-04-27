@@ -79,6 +79,8 @@ const LaceArchive = () => {
   const abortRef = useRef<AbortController | null>(null);
   const euroPageRef = useRef(1);
 
+  useEffect(() => { document.title = "Lace Archive | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
+
   useEffect(() => {
     abortRef.current?.abort();
     setArtworks([]);
