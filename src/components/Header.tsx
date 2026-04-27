@@ -35,7 +35,7 @@ const Header = () => {
               `flex items-center gap-1.5 ${isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}`
             }
           >
-          your store
+          saved
           </NavLink>
           <NavLink
             to="/journal"
