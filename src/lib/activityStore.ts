@@ -44,7 +44,10 @@ export function getActivities(): ActivityEntry[] {
 function saveActivities(activities: ActivityEntry[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-  } catch { /* quota */ }
+    console.log("[activityStore] saved to localStorage:", activities.length, "items");
+  } catch (e) {
+    console.error("[activityStore] localStorage write FAILED:", e);
+  }
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 
@@ -118,8 +121,10 @@ export async function hydrateFromSupabase(): Promise<void> {
       .eq("user_id", getUserId())
       .order("timestamp", { ascending: false });
 
-    if (error || !data) return;
+    if (error) { console.warn("[activityStore] Supabase SELECT error:", error); return; }
+    if (!data) { console.warn("[activityStore] Supabase returned null data"); return; }
 
+    console.log("[activityStore] Supabase returned", data.length, "items");
     const remote = data.map(fromRow);
     const local = getActivities();
 
@@ -151,12 +156,15 @@ export function addActivity(entry: Omit<ActivityEntry, "id" | "timestamp">) {
   if (activities.length > MAX_ACTIVITIES) activities.length = MAX_ACTIVITIES;
   saveActivities(activities);
 
+  console.log("[activityStore] addActivity called, total now:", activities.length);
+
   // Sync to Supabase in the background
   supabase
     .from("saved_items")
     .insert(toRow(newEntry))
     .then(({ error }) => {
-      if (error) console.warn("[activityStore] insert failed", error);
+      if (error) console.warn("[activityStore] Supabase insert failed:", error);
+      else console.log("[activityStore] Supabase insert OK");
     });
 }
 
