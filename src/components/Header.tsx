@@ -11,7 +11,7 @@ const Header = () => {
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
             }
           >
-            collection
+            main archive
           </NavLink>
           <NavLink
             to="/lace-archive"
@@ -27,7 +27,7 @@ const Header = () => {
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
             }
           >
-            uncovered
+            explored
           </NavLink>
           <NavLink
             to="/curate"
@@ -35,7 +35,7 @@ const Header = () => {
               `flex items-center gap-1.5 ${isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}`
             }
           >
-          curate
+          your store
           </NavLink>
           <NavLink
             to="/journal"
@@ -43,7 +43,7 @@ const Header = () => {
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"
             }
           >
-            journal
+            field notes
           </NavLink>
         </nav>
       </div>
