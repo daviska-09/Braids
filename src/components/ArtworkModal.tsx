@@ -196,7 +196,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                   onClick={() => setShowPostcard((v) => !v)}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5" /> send as postcard
+                  <Mail className="w-3.5 h-3.5" /> dispatch
                 </button>
               </div>
 
