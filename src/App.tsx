@@ -25,7 +25,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Gallery />} />
           <Route path="/lace-archive" element={<LaceArchive />} />
+          <Route path="/explored" element={<Uncovered />} />
           <Route path="/uncovered" element={<Uncovered />} />
+          <Route path="/saved" element={<CurateTogether />} />
           <Route path="/curate" element={<CurateTogether />} />
           <Route path="/field-notes" element={<Journal />} />
           <Route path="/journal" element={<Journal />} />
