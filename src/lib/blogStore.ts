@@ -18,11 +18,7 @@ export async function initPosts(): Promise<void> {
     if (!res.ok) return;
     const shared: BlogPost[] = await res.json();
     if (!Array.isArray(shared) || shared.length === 0) return;
-    const local = readPosts();
-    // JSON is authoritative for published posts. Keep only local drafts not yet in the JSON.
-    const sharedIds = new Set(shared.map(p => p.id));
-    const localDrafts = local.filter(p => !sharedIds.has(p.id));
-    writePosts([...shared, ...localDrafts]);
+    writePosts(shared);
   } catch { /* silently ignore — localStorage data remains intact */ }
 }
 
