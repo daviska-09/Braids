@@ -9,7 +9,7 @@ export interface BlogPost {
 
 const STORAGE_KEY = "blog_posts";
 const ADMIN_KEY   = "blog_admin";
-const SEEDED_KEY  = "blog_seeded_v1";
+const SEEDED_KEY  = "blog_seeded_v2";
 
 // Fetch shared posts from the committed JSON file and seed localStorage once.
 // After seeding, localStorage is the source of truth so admin edits are preserved.
