@@ -19,9 +19,10 @@ export async function initPosts(): Promise<void> {
     const shared: BlogPost[] = await res.json();
     if (!Array.isArray(shared) || shared.length === 0) return;
     const local = readPosts();
-    const localIds = new Set(local.map(p => p.id));
-    const merged = [...local, ...shared.filter(p => !localIds.has(p.id))];
-    writePosts(merged);
+    // JSON is authoritative for published posts. Keep only local drafts not yet in the JSON.
+    const sharedIds = new Set(shared.map(p => p.id));
+    const localDrafts = local.filter(p => !sharedIds.has(p.id));
+    writePosts([...shared, ...localDrafts]);
   } catch { /* silently ignore — localStorage data remains intact */ }
 }
 
