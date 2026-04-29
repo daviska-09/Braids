@@ -9,25 +9,20 @@ export interface BlogPost {
 
 const STORAGE_KEY = "blog_posts";
 const ADMIN_KEY   = "blog_admin";
-const SEEDED_KEY  = "blog_seeded_v2";
 
-// Fetch shared posts from the committed JSON file and seed localStorage once.
-// After seeding, localStorage is the source of truth so admin edits are preserved.
+// Always fetch the committed JSON and merge in any new posts.
+// Local/admin posts are preserved — only posts not already in localStorage are added.
 export async function initPosts(): Promise<void> {
-  if (localStorage.getItem(SEEDED_KEY)) return;
   try {
     const res = await fetch("/journal-posts.json");
     if (!res.ok) return;
     const shared: BlogPost[] = await res.json();
     if (!Array.isArray(shared) || shared.length === 0) return;
-    // Merge: keep any locally-added posts, add shared ones that don't exist yet
     const local = readPosts();
     const localIds = new Set(local.map(p => p.id));
     const merged = [...local, ...shared.filter(p => !localIds.has(p.id))];
     writePosts(merged);
-  } catch { /* silently ignore */ } finally {
-    localStorage.setItem(SEEDED_KEY, "1");
-  }
+  } catch { /* silently ignore — localStorage data remains intact */ }
 }
 
 function readPosts(): BlogPost[] {
