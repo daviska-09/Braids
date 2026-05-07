@@ -92,7 +92,7 @@ const Gallery = () => {
     setPendingSkeletons(BATCH_SIZE);
     fetchMixedTextileIds().then((ids) => {
       setAllIds(ids);
-      loadBatch(ids, 0, 1);
+      loadBatch(ids, 0, euroPageRef.current);
     });
     return () => { abortRef.current?.abort(); prefetchAbortRef.current?.abort(); };
   }, [originsParam]);
