@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const About = () => {
   useEffect(() => {
@@ -33,7 +34,12 @@ const About = () => {
           across millennia of human history.
         </p>
         <p>
-          The spindle whorl is among our earliest mechanical tools, used to spin natural fibres into
+          <a
+            href="https://www.metmuseum.org/art/collection/search/327834"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground transition-colors"
+          >The spindle whorl</a> is among our earliest mechanical tools, used to spin natural fibres into
           workable thread. It predates most of the technologies we think of as foundational. Long
           before states, before codified law, before most of what ends up in the history books,
           someone was spinning thread. The people who did that work (overwhelmingly women, across
@@ -46,7 +52,7 @@ const About = () => {
           we must look to what has been done before to be inspired, improve and innovate.
         </p>
         <p>
-          The Irish Lace archive holds our particular focus. It shows how intricate technical
+          <Link to="/lace-archive" className="underline hover:text-foreground transition-colors">The Irish Lace archive</Link> holds our particular focus. It shows how intricate technical
           knowledge can survive adverse conditions: a tradition that encoded economic survival,
           political resistance, and extraordinary craft expertise into a delicate form small enough
           to fold up in a pocket.
