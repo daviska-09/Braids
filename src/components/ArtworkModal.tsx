@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Artwork } from "@/lib/artwork";
 import { addActivity, isArtworkSaved } from "@/lib/activityStore";
@@ -14,6 +14,35 @@ interface ArtworkModalProps {
 
 const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProps) => {
   const [showPostcard, setShowPostcard] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const dragStart = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
+
+  const openLightbox = () => { setLightbox(true); setScale(1); setPos({ x: 0, y: 0 }); };
+  const closeLightbox = () => setLightbox(false);
+
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setScale((s) => Math.min(8, Math.max(1, s - e.deltaY * 0.001)));
+  }, []);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (scale <= 1) return;
+    dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragStart.current) return;
+    setPos({ x: dragStart.current.px + e.clientX - dragStart.current.mx, y: dragStart.current.py + e.clientY - dragStart.current.my });
+  };
+  const onMouseUp = () => { dragStart.current = null; };
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeLightbox(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
   const [email, setEmail] = useState("");
   const [senderName, setSenderName] = useState("");
   const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.id) : false);
@@ -148,7 +177,8 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                   alt={artwork.title}
                   onLoad={() => setImgLoaded(true)}
                   onError={() => setImgFailed(true)}
-                  className={`max-h-[60vh] object-contain relative transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+                  onClick={imgLoaded ? openLightbox : undefined}
+                  className={`max-h-[60vh] object-contain relative transition-opacity duration-300 ${imgLoaded ? "opacity-100 cursor-zoom-in" : "opacity-0"}`}
                 />
               )}
             </div>
@@ -249,6 +279,46 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
           </div>
         </motion.div>
       </motion.div>
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
+          onClick={(e) => { if (e.target === e.currentTarget) closeLightbox(); }}
+          onWheel={onWheel}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={imgSrc}
+            alt={artwork.title}
+            onMouseDown={onMouseDown}
+            style={{
+              transform: `scale(${scale}) translate(${pos.x / scale}px, ${pos.y / scale}px)`,
+              transformOrigin: "center center",
+              transition: dragStart.current ? "none" : "transform 0.15s ease",
+              cursor: scale > 1 ? "grab" : "zoom-in",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              userSelect: "none",
+            }}
+            onClick={() => {
+              if (scale === 1) setScale(2.5);
+              else { setScale(1); setPos({ x: 0, y: 0 }); }
+            }}
+            draggable={false}
+          />
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs">
+            scroll or click to zoom · drag to pan · esc to close
+          </p>
+        </div>
+      )}
     </AnimatePresence>
   );
 };
