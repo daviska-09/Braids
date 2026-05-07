@@ -83,7 +83,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
   const handleSendPostcard = () => {
     if (!email) return;
     const senderFirstName = senderName.trim() || "Someone";
-    const subject = encodeURIComponent(`${senderFirstName} sent you a postcard from The Reel Museum`);
+    const subject = encodeURIComponent(`${senderFirstName} sent you a dispatch from The Reel Museum`);
     const body = encodeURIComponent(
       `I came across this piece and wanted to share with you.\n\n"${artwork.title}"${artwork.artist ? ` by ${artwork.artist}` : ""}${artwork.date ? `, ${artwork.date}` : ""}\n\nView it here: ${shareUrl}\n\nThe Reel Museum is a museum without walls, celebrating 5,000 years of textiles and human craftsmanship. Scroll, discover and share pieces from human history around the globe.`
     );
