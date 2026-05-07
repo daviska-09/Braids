@@ -10,6 +10,7 @@ const LandingOverlay = () => {
 
   useEffect(() => {
     if (removed) return;
+    sessionStorage.setItem(SEEN_KEY, "1");
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, [removed]);
