@@ -21,36 +21,35 @@ const About = () => {
           societies for as long as those societies have existed.
         </p>
         <p>
-          The spindle whorl (whorl pictured) is among our earliest mechanical tools. It predates
-          most of the technologies we think of as foundational. Long before states, before codified
-          law, before most of what ends up in the history books, someone was spinning thread. The
-          people who did that work (overwhelmingly women, across most of human history) rarely made
-          it into history books. Their labour built empires, clothed armies, hoisted sails and
-          generated the wealth that funded merchants, cities and industries.
+          Public history is, at its best, an argument about whose past counts and who has authority
+          to tell it. Textile History deserves to be better represented than they have been from the
+          historical record, and we are attempting to do something about that.
         </p>
-        <p>Reel Museum is a free textile and tools archive resource.</p>
         <p>
-          We are an open source research tool for creators, designers, artists, technologists,
-          crafters and historians. It draws from the permanent textile and artefact collections of
-          Europeana, the Metropolitan Museum of Art, the Art Institute of Chicago, and a growing
-          body of primary archive material across Europe, surfacing textiles and craft objects
+          Reel Museum is a free textile and tools archive resource and research tool for creators,
+          designers, artists, technologists, crafters and historians. It draws from the permanent
+          textile and artefact collections of Europeana, the Metropolitan Museum of Art, the Art
+          Institute of Chicago, and a growing body of primary archive material across Europe and
           across millennia of human history.
         </p>
         <p>
-          The premise is simple: these objects deserve to be looked at, thought about and used. The
-          next innovations in design, craft, and technology will not emerge from nowhere, often we
-          must look to what has been done before to be inspired, improve and innovate.
+          The spindle whorl is among our earliest mechanical tools, used to spin natural fibres into
+          workable thread. It predates most of the technologies we think of as foundational. Long
+          before states, before codified law, before most of what ends up in the history books,
+          someone was spinning thread. The people who did that work (overwhelmingly women, across
+          most of human history) rarely made it into history books. Their labour built empires,
+          clothed armies, hoisted sails and generated the wealth that funded merchants, cities and
+          industries.
         </p>
         <p>
-          The Irish Lace archive holds our particular focus. It shows how technical knowledge can
-          survive adverse conditions: a tradition that encoded economic survival, political
-          resistance, and extraordinary craft expertise into a delicate form small enough to fold up
-          in a pocket.
+          The next innovations in design, craft, and technology will not emerge from nowhere, often
+          we must look to what has been done before to be inspired, improve and innovate.
         </p>
         <p>
-          Public history is, at its best, an argument about whose past counts and who gets to tell
-          it. Textile History deserves to be better represented than they have been from the
-          historical record, and we are attempting to do something about that.
+          The Irish Lace archive holds our particular focus. It shows how intricate technical
+          knowledge can survive adverse conditions: a tradition that encoded economic survival,
+          political resistance, and extraordinary craft expertise into a delicate form small enough
+          to fold up in a pocket.
         </p>
         <p>
           If you would like to get in contact, email{" "}
