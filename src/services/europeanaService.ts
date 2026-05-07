@@ -76,6 +76,7 @@ async function fetchEuropeana(
     profile: "rich",
   });
   params.append("qf", "TYPE:IMAGE");
+  params.set("thumbnail", "true");
   params.append("reusability", "open");
   params.append("reusability", "permission");
   if (irishOnly) params.append("qf", "COUNTRY:ireland");
