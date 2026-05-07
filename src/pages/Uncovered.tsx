@@ -185,7 +185,7 @@ const Uncovered = () => {
             </>
           )}
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-10">
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
         </p>
         <a href="/" className="inline-flex flex-col items-center gap-2 group">
