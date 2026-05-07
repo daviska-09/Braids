@@ -45,11 +45,14 @@ async function fetchMixedTextileIds(): Promise<TaggedId[]> {
       })
       .catch(() => [] as TaggedId[]),
   ]);
-  // First 4 positions are always Met — they resolve fastest from the local pool.
-  // AIC and Europeana fill positions 4+ interleaved as usual.
-  const firstFour = metIds.slice(0, 4);
-  const rest = interleave(metIds.slice(4), aicIds);
-  return [...firstFour, ...rest];
+  // Fully shuffle the combined list so batches don't pull consecutive items
+  // from the same collection.
+  const combined = interleave(metIds, aicIds);
+  for (let i = combined.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [combined[i], combined[j]] = [combined[j], combined[i]];
+  }
+  return combined;
 }
 
 const Gallery = () => {
@@ -163,14 +166,14 @@ const Gallery = () => {
 
     if (!controller.signal.aborted) {
       setCursor(start + slice.length);
-      euroPageRef.current = euroPage + 1;
+      euroPageRef.current = Math.floor(Math.random() * 80) + 1;
       setLoading(false);
       setPendingSkeletons(0);
       loadingRef.current = false;
 
       // Kick off background prefetch for the next batch so items land in
       // sessionStorage before the user scrolls to trigger the real load.
-      prefetchBatch(ids, start + slice.length, euroPage + 1);
+      prefetchBatch(ids, start + slice.length, euroPageRef.current);
     }
   };
 
