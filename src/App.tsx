@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/Header";
+import LandingOverlay from "@/components/LandingOverlay";
 import Gallery from "@/pages/Gallery";
 import Uncovered from "@/pages/Uncovered";
 import CurateTogether from "@/pages/CurateTogether";
@@ -18,6 +19,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <LandingOverlay />
       <Toaster />
       <Sonner />
       <BrowserRouter>

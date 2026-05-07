@@ -1,0 +1,114 @@
+:root {
+  --rm-accent:        hsl(152, 30%, 42%);
+  --rm-duration-spin: 8s;
+  --rm-duration-fast: 0.4s;
+  --rm-duration-fade: 0.6s;
+  --rm-font:          'Anca Coder', 'Courier New', Courier, monospace;
+}
+
+#rm-landing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  transition: opacity var(--rm-duration-fade) ease-in-out;
+}
+
+#rm-landing-overlay.rm-dissolve {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#rm-glass {
+  position: absolute;
+  inset: 0;
+  background: hsla(0, 0%, 0%, 0.52);
+  backdrop-filter: blur(2px) saturate(0.5);
+  -webkit-backdrop-filter: blur(2px) saturate(0.5);
+}
+
+/* ---------- Stage ---------- */
+#rm-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* ---------- "tap to explore the archive" ---------- */
+/* 26 characters — monospace so ch units are exact */
+#rm-label {
+  font-family: var(--rm-font);
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin: 0 0 -1.8rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: rm-typing 0.8s steps(26, end) 0.2s forwards;
+}
+
+@keyframes rm-typing {
+  from { width: 0; }
+  /* ch covers character widths; the extra 1.2em covers letter-spacing across 26 chars */
+  to   { width: calc(26ch + 1.2em); }
+}
+
+/* ---------- Spindle whorl ---------- */
+#rm-whorl {
+  width: clamp(400px, 60vmin, 700px);
+  height: clamp(400px, 60vmin, 700px);
+  object-fit: contain;
+  filter: brightness(0) invert(1)
+          drop-shadow(0 0 18px hsla(0, 0%, 100%, 0.25));
+  animation: rm-spin-idle var(--rm-duration-spin) linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+#rm-whorl.rm-spinning-fast {
+  animation: rm-spin-fast var(--rm-duration-fast) linear infinite;
+}
+
+@keyframes rm-spin-idle {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes rm-spin-fast {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ---------- "Reel Museum" ---------- */
+#rm-title {
+  font-family: var(--rm-font);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+/* ---------- Focus ring ---------- */
+#rm-landing-overlay:focus-visible {
+  outline: 2px solid var(--rm-accent);
+  outline-offset: -4px;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #rm-whorl    { animation: none; }
+  #rm-label    { animation: none; width: calc(26ch + 1.2em); opacity: 0.75; }
+  #rm-stage    { animation: none; }
+  #rm-landing-overlay { transition: opacity 0.3s ease; }
+}
