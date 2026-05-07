@@ -179,18 +179,11 @@ export async function getMetBatch(
  * Shuffles on every call for variety. Caches in sessionStorage to avoid
  * re-fetching the JSON within the same session.
  */
-const SESSION_IDS_KEY = "met_textile_ids";
-
 export async function getMetTextileIds(): Promise<number[]> {
-  const stored = sessionStorage.getItem(SESSION_IDS_KEY);
-  const ids: number[] = stored
-    ? (JSON.parse(stored) as number[])
-    : await fetch("/textile-ids.json").then((r) => r.json() as Promise<number[]>);
-
+  const ids: number[] = await fetch("/textile-ids.json").then((r) => r.json() as Promise<number[]>);
   for (let i = ids.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [ids[i], ids[j]] = [ids[j], ids[i]];
   }
-  sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   return ids;
 }
