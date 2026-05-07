@@ -29,6 +29,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     setImgSrc(artwork.imageSmall);
     setImgLoaded(false);
     setImgFailed(false);
+    setIsSaved(isArtworkSaved(artwork.id));
     if (!artwork.imageFull) return;
     const img = new Image();
     img.src = artwork.imageFull;
