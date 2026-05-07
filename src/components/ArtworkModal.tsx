@@ -109,7 +109,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
       artworkMuseum: artwork.museum,
       artworkSource: artwork.source,
     });
-    toast("Postcard ready to send");
+    toast("Dispatch ready to send");
     setEmail("");
     setSenderName("");
     setShowPostcard(false);

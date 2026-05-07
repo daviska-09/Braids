@@ -101,7 +101,7 @@ const CurateTogether = () => {
                       {a.action === "saved" ? (
                         <><Link2 className="w-3 h-3 flex-shrink-0" /> saved to collection</>
                       ) : (
-                        <><Mail className="w-3 h-3 flex-shrink-0" /> sent as postcard{a.recipientHint ? ` to ${a.recipientHint}` : ""}</>
+                        <><Mail className="w-3 h-3 flex-shrink-0" /> sent as dispatch{a.recipientHint ? ` to ${a.recipientHint}` : ""}</>
                       )}
                     </p>
                     <p className="text-xs text-foreground/30 mt-1">{timeAgo(a.timestamp)}</p>
