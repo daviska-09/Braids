@@ -191,6 +191,6 @@ export async function getMetTextileIds(): Promise<number[]> {
     const j = Math.floor(Math.random() * (i + 1));
     [ids[i], ids[j]] = [ids[j], ids[i]];
   }
-  if (!stored) sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
+  sessionStorage.setItem(SESSION_IDS_KEY, JSON.stringify(ids));
   return ids;
 }

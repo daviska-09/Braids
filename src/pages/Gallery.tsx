@@ -67,7 +67,7 @@ const Gallery = () => {
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const prefetchAbortRef = useRef<AbortController | null>(null);
-  const euroPageRef = useRef(1);
+  const euroPageRef = useRef(Math.floor(Math.random() * 25) + 1);
 
   useEffect(() => { document.title = "Main Archive | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
 
@@ -85,7 +85,7 @@ const Gallery = () => {
     abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
-    euroPageRef.current = 1;
+    euroPageRef.current = Math.floor(Math.random() * 25) + 1;
     setLoading(true);
     loadingRef.current = false;
     setPendingSkeletons(BATCH_SIZE);
