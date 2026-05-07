@@ -127,24 +127,17 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    // Buffer incoming items and flush on a fixed 200ms throttle interval so
-    // cards stream into the grid steadily as they arrive — not as a debounce
-    // which would wait for a 200ms quiet gap (i.e. until the very last item).
+    // Collect ALL items before displaying — the old streaming interval caused
+    // localStorage-cached items to always resolve first and appear at the top,
+    // defeating the shuffle entirely.
     const buffer: Artwork[] = [];
     const euroBuffer: Artwork[] = [];
-    const flushInterval = setInterval(() => {
-      if (buffer.length === 0 || controller.signal.aborted) return;
-      const items = buffer.splice(0);
-      setArtworks((prev) => [...prev, ...items]);
-    }, 200);
 
     const addItem = (artwork: Artwork | null) => {
       if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
       buffer.push(artwork);
     };
 
-    // All sources fire in parallel. retries=1 caps Met delay at 1s per item;
-    // combined with the 3s timeout this is more than sufficient headroom.
     await Promise.allSettled([
       ...slice.map((item) =>
         withTimeout(fetchArtwork(item, 1, controller.signal), 3000).then(addItem)
@@ -158,10 +151,8 @@ const Gallery = () => {
       ),
     ]);
 
-    clearInterval(flushInterval);
-    // Shuffle remaining Met/AIC items together with Europeana items so all
-    // sources appear visually mixed rather than source-grouped in each batch.
-    const finalBatch = [...buffer.splice(0), ...euroBuffer];
+    // Shuffle everything together so no source dominates the top.
+    const finalBatch = [...buffer, ...euroBuffer];
     for (let i = finalBatch.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [finalBatch[i], finalBatch[j]] = [finalBatch[j], finalBatch[i]];
