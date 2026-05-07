@@ -137,18 +137,8 @@ const Gallery = () => {
       buffer.push(artwork);
     };
 
-    // Flush buffer on interval, shuffling each flush so arrival order doesn't
-    // dictate display order. 600ms window gives most cached items time to land.
-    const flushInterval = setInterval(() => {
-      if (buffer.length === 0 || controller.signal.aborted) return;
-      const items = buffer.splice(0);
-      for (let i = items.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [items[i], items[j]] = [items[j], items[i]];
-      }
-      setArtworks((prev) => [...prev, ...items]);
-    }, 600);
-
+    // Wait for ALL sources before displaying — this is the only way to
+    // guarantee a true shuffle across sources. Skeletons show while waiting.
     await Promise.allSettled([
       ...slice.map((item) =>
         withTimeout(fetchArtwork(item, 1, controller.signal), 2500).then(addItem)
@@ -158,19 +148,17 @@ const Gallery = () => {
           if (!controller.signal.aborted)
             items.filter(isCollectionPiece).forEach((a) => addItem(a));
         }),
-        4000
+        3500
       ),
     ]);
 
-    clearInterval(flushInterval);
-    // Final flush — shuffle remaining items including any Europeana stragglers.
+    // Shuffle everything together then display as one batch.
+    for (let i = buffer.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [buffer[i], buffer[j]] = [buffer[j], buffer[i]];
+    }
     if (buffer.length > 0 && !controller.signal.aborted) {
-      const remaining = buffer.splice(0);
-      for (let i = remaining.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-      }
-      setArtworks((prev) => [...prev, ...remaining]);
+      setArtworks((prev) => [...prev, ...buffer]);
     }
 
     if (!controller.signal.aborted) {
