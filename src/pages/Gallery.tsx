@@ -230,7 +230,7 @@ const Gallery = () => {
 
       {!origins.length && (
         <p className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-10 max-w-xl">
-          every object tells a story.
+          every object and thread tells a story.
         </p>
       )}
 
