@@ -164,7 +164,7 @@ const Uncovered = () => {
   const loading = totalIds === null;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 relative">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 pt-16 relative">
       <div className="text-center max-w-xl">
         <h1 className="font-serif text-4xl md:text-6xl font-normal mb-8">
           archive explored

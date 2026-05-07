@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import "./LandingOverlay.css";
 
+const SEEN_KEY = "reel_overlay_seen";
+
 const LandingOverlay = () => {
   const [dissolve, setDissolve] = useState(false);
-  const [removed, setRemoved] = useState(false);
+  const [removed, setRemoved] = useState(() => !!sessionStorage.getItem(SEEN_KEY));
   const triggered = useRef(false);
 
   useEffect(() => {
+    if (removed) return;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
-  }, []);
+  }, [removed]);
 
   const dismiss = () => {
     if (triggered.current) return;
@@ -20,6 +23,7 @@ const LandingOverlay = () => {
 
     setTimeout(() => setDissolve(true), 1200);
     setTimeout(() => {
+      sessionStorage.setItem(SEEN_KEY, "1");
       setRemoved(true);
       document.body.style.overflow = "";
     }, 1800);
