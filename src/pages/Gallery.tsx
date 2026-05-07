@@ -130,38 +130,47 @@ const Gallery = () => {
     const slice = ids.slice(start, start + BATCH_SIZE * 2);
     setPendingSkeletons(BATCH_SIZE);
 
-    // Collect ALL items before displaying — the old streaming interval caused
-    // localStorage-cached items to always resolve first and appear at the top,
-    // defeating the shuffle entirely.
     const buffer: Artwork[] = [];
-    const euroBuffer: Artwork[] = [];
 
     const addItem = (artwork: Artwork | null) => {
       if (!artwork || controller.signal.aborted || !isCollectionPiece(artwork)) return;
       buffer.push(artwork);
     };
 
+    // Flush buffer on interval, shuffling each flush so arrival order doesn't
+    // dictate display order. 600ms window gives most cached items time to land.
+    const flushInterval = setInterval(() => {
+      if (buffer.length === 0 || controller.signal.aborted) return;
+      const items = buffer.splice(0);
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      setArtworks((prev) => [...prev, ...items]);
+    }, 600);
+
     await Promise.allSettled([
       ...slice.map((item) =>
-        withTimeout(fetchArtwork(item, 1, controller.signal), 3000).then(addItem)
+        withTimeout(fetchArtwork(item, 1, controller.signal), 2500).then(addItem)
       ),
       withTimeout(
         fetchEuropeanaCollection(euroPage).then((items) => {
           if (!controller.signal.aborted)
-            items.filter(isCollectionPiece).forEach((a) => euroBuffer.push(a));
+            items.filter(isCollectionPiece).forEach((a) => addItem(a));
         }),
-        6000
+        4000
       ),
     ]);
 
-    // Shuffle everything together so no source dominates the top.
-    const finalBatch = [...buffer, ...euroBuffer];
-    for (let i = finalBatch.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [finalBatch[i], finalBatch[j]] = [finalBatch[j], finalBatch[i]];
-    }
-    if (finalBatch.length > 0 && !controller.signal.aborted) {
-      setArtworks((prev) => [...prev, ...finalBatch]);
+    clearInterval(flushInterval);
+    // Final flush — shuffle remaining items including any Europeana stragglers.
+    if (buffer.length > 0 && !controller.signal.aborted) {
+      const remaining = buffer.splice(0);
+      for (let i = remaining.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+      }
+      setArtworks((prev) => [...prev, ...remaining]);
     }
 
     if (!controller.signal.aborted) {
