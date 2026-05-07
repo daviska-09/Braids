@@ -137,6 +137,14 @@ async function fetchEuropeana(
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+/** Call on Gallery mount to bust the collection page cache so fresh items are fetched. */
+export function clearEuropeanaCollectionCache(): void {
+  try {
+    const toRemove = Object.keys(sessionStorage).filter((k) => k.startsWith("europeana:collection:"));
+    for (const k of toRemove) sessionStorage.removeItem(k);
+  } catch { /* ignore */ }
+}
+
 export function fetchEuropeanaCollection(page: number, signal?: AbortSignal): Promise<ArtworkObject[]> {
   return fetchEuropeana(COLLECTION_QUERY, page, false, "europeana:collection", signal);
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchTextileObjectIds, fetchObject } from "@/lib/metApi";
 import { fetchArtwork, fromMetObject, interleave, type Artwork, type TaggedId } from "@/lib/artwork";
-import { fetchEuropeanaCollection } from "@/services/europeanaService";
+import { fetchEuropeanaCollection, clearEuropeanaCollectionCache } from "@/services/europeanaService";
 import { isCollectionPiece } from "@/utils/textileFilters";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
@@ -82,6 +82,7 @@ const Gallery = () => {
   }, []);
 
   useEffect(() => {
+    clearEuropeanaCollectionCache();
     abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
