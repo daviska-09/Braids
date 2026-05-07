@@ -19,6 +19,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
   const [isSaved, setIsSaved] = useState(() => artwork ? isArtworkSaved(artwork.id) : false);
   const [imgSrc, setImgSrc] = useState(artwork?.imageSmall ?? "");
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const [localNote, setLocalNote] = useState(note ?? "");
 
   useEffect(() => { setLocalNote(note ?? ""); }, [note]);
@@ -27,6 +28,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     if (!artwork) return;
     setImgSrc(artwork.imageSmall);
     setImgLoaded(false);
+    setImgFailed(false);
     if (!artwork.imageFull) return;
     const img = new Image();
     img.src = artwork.imageFull;
@@ -136,15 +138,18 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
           </button>
           <div className="flex flex-col md:flex-row">
             <div className="md:w-1/2 bg-muted flex items-center justify-center p-6 relative min-h-[200px]">
-              {!imgLoaded && (
+              {!imgLoaded && !imgFailed && (
                 <div className="absolute inset-0 bg-muted animate-pulse" />
               )}
-              <img
-                src={imgSrc}
-                alt={artwork.title}
-                onLoad={() => setImgLoaded(true)}
-                className={`max-h-[60vh] object-contain relative transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-              />
+              {!imgFailed && (
+                <img
+                  src={imgSrc}
+                  alt={artwork.title}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={() => setImgFailed(true)}
+                  className={`max-h-[60vh] object-contain relative transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+                />
+              )}
             </div>
             <div className="md:w-1/2 p-8 flex flex-col justify-center">
               <h2 className="font-serif text-xl leading-snug mb-3">{artwork.title}</h2>
