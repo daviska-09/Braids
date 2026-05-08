@@ -138,12 +138,15 @@ function fromRow(row: Record<string, unknown>): ActivityEntry {
 
 export async function hydrateFromSupabase(): Promise<void> {
   try {
+    const userId = getUserId();
+    console.log("[hydrateFromSupabase] user_id:", userId);
     const { data, error } = await supabase
       .from("saved_items")
       .select("*")
-      .eq("user_id", getUserId())
+      .eq("user_id", userId)
       .order("timestamp", { ascending: false });
 
+    console.log("[hydrateFromSupabase] rows from Supabase:", data?.length, "error:", error);
     if (error || !data) return;
     const remote = data.map(fromRow);
     const local = getActivities();
@@ -157,8 +160,10 @@ export async function hydrateFromSupabase(): Promise<void> {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, MAX_ACTIVITIES);
 
+    console.log("[hydrateFromSupabase] merged total:", merged.length);
     saveActivities(merged);
-  } catch {
+  } catch (e) {
+    console.warn("[hydrateFromSupabase] failed:", e);
     // Network failure — localStorage data remains intact
   }
 }
