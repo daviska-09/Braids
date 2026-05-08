@@ -138,7 +138,8 @@ export function adaptAICObject(obj: ArticObject): ArtworkObject | null {
 export function adaptEuropeanaItem(item: EuropeanaItem): ArtworkObject | null {
   const imageSmall = (item.edmPreview as string[] | undefined)?.[0] ?? "";
   const title = (item.title as string[] | undefined)?.[0] ?? "";
-  if (!imageSmall || !title) return null;
+  const shownBy = (item.edmIsShownBy as string[] | undefined)?.[0] ?? "";
+  if (!imageSmall || !title || !shownBy) return null;
   return {
     id: String(item.id ?? ""),
     source: "europeana",
