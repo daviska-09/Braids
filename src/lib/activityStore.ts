@@ -136,18 +136,15 @@ function fromRow(row: Record<string, unknown>): ActivityEntry {
 // user from Supabase, merges with localStorage (Supabase wins on conflict),
 // and writes the merged result back to localStorage.
 
-export async function hydrateFromSupabase(): Promise<void> {
+export async function hydrateFromSupabase(): Promise<ActivityEntry[]> {
   try {
-    const userId = getUserId();
-    console.log("[hydrateFromSupabase] user_id:", userId);
     const { data, error } = await supabase
       .from("saved_items")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", getUserId())
       .order("timestamp", { ascending: false });
 
-    console.log("[hydrateFromSupabase] rows from Supabase:", data?.length, "error:", error);
-    if (error || !data) return;
+    if (error || !data) return getActivities();
     const remote = data.map(fromRow);
     const local = getActivities();
 
@@ -157,14 +154,13 @@ export async function hydrateFromSupabase(): Promise<void> {
     const localOnly = local.filter((l) => !remoteIds.has(l.id));
 
     const merged = [...remote, ...localOnly]
-      .sort((a, b) => b.timestamp - a.timestamp)
+      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
       .slice(0, MAX_ACTIVITIES);
 
-    console.log("[hydrateFromSupabase] merged total:", merged.length);
     saveActivities(merged);
-  } catch (e) {
-    console.warn("[hydrateFromSupabase] failed:", e);
-    // Network failure — localStorage data remains intact
+    return merged;
+  } catch {
+    return getActivities();
   }
 }
 

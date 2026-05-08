@@ -44,7 +44,7 @@ const CurateTogether = () => {
   useEffect(() => { document.title = "Saved | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
 
   useEffect(() => {
-    hydrateFromSupabase(); // merge Supabase data into localStorage on mount
+    hydrateFromSupabase().then(setActivities);
     const unsub = onActivityChange(() => setActivities(getActivities()));
     return unsub;
   }, []);
