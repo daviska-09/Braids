@@ -29,15 +29,7 @@ const Header = () => {
           >
             explored
           </NavLink>
-          <NavLink
-            to="/saved"
-            className={({ isActive }) =>
-              `flex items-center gap-1.5 ${isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}`
-            }
-          >
-          saved
-          </NavLink>
-          <NavLink
+<NavLink
             to="/field-notes"
             className={({ isActive }) =>
               isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"

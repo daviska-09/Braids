@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Bookmark } from "lucide-react";
 import Header from "@/components/Header";
 import LandingOverlay from "@/components/LandingOverlay";
 import Gallery from "@/pages/Gallery";
@@ -24,6 +25,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Header />
+        <Link
+          to="/saved"
+          className="fixed bottom-6 right-6 z-50 p-3 bg-background border border-border rounded-full shadow-md text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Saved collection"
+        >
+          <Bookmark size={18} />
+        </Link>
         <Routes>
           <Route path="/" element={<Gallery />} />
           <Route path="/lace-archive" element={<LaceArchive />} />

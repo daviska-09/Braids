@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Artwork } from "@/lib/artwork";
-import { addActivity, isArtworkSaved } from "@/lib/activityStore";
+import { addActivity, removeActivity, getActivities, isArtworkSaved } from "@/lib/activityStore";
 import { X, Link2, Mail, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
@@ -85,28 +85,35 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
   };
 
   const handleSave = () => {
-    addActivity({
-      artworkId: artwork.id,
-      artworkTitle: artwork.title,
-      artworkArtist: artwork.artist,
-      artworkImage: artwork.imageSmall || artwork.imageFull,
-      action: "saved",
-      artworkArtistBio: artwork.artistBio,
-      artworkDate: artwork.date,
-      artworkMedium: artwork.medium,
-      artworkDimensions: artwork.dimensions,
-      artworkCulture: artwork.culture,
-      artworkCountry: artwork.country,
-      artworkRegion: artwork.region,
-      artworkClassification: artwork.classification,
-      artworkDepartment: artwork.department,
-      artworkCredit: artwork.credit,
-      artworkObjectUrl: artwork.objectUrl,
-      artworkMuseum: artwork.museum,
-      artworkSource: artwork.source,
-    });
-    setIsSaved(true);
-    toast("Saved to collection");
+    if (isSaved) {
+      const entry = getActivities().find((a) => a.artworkId === artwork.id && a.action === "saved");
+      if (entry) removeActivity(entry.id);
+      setIsSaved(false);
+      toast("Removed from collection");
+    } else {
+      addActivity({
+        artworkId: artwork.id,
+        artworkTitle: artwork.title,
+        artworkArtist: artwork.artist,
+        artworkImage: artwork.imageSmall || artwork.imageFull,
+        action: "saved",
+        artworkArtistBio: artwork.artistBio,
+        artworkDate: artwork.date,
+        artworkMedium: artwork.medium,
+        artworkDimensions: artwork.dimensions,
+        artworkCulture: artwork.culture,
+        artworkCountry: artwork.country,
+        artworkRegion: artwork.region,
+        artworkClassification: artwork.classification,
+        artworkDepartment: artwork.department,
+        artworkCredit: artwork.credit,
+        artworkObjectUrl: artwork.objectUrl,
+        artworkMuseum: artwork.museum,
+        artworkSource: artwork.source,
+      });
+      setIsSaved(true);
+      toast("Saved to collection");
+    }
   };
 
   const handleSendPostcard = () => {
