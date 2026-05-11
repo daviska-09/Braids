@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import FloatingFooter from "@/components/FloatingFooter";
 import { EXPLORED_KEY, getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
 
@@ -161,6 +162,16 @@ const Uncovered = () => {
     setResetVal("");
   };
 
+  const [returning, setReturning] = useState(false);
+  const navigate = useNavigate();
+
+  const handleReturn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (returning) return;
+    setReturning(true);
+    setTimeout(() => navigate("/"), 1200);
+  };
+
   const loading = totalIds === null;
 
   return (
@@ -188,12 +199,12 @@ const Uncovered = () => {
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
         </p>
-        <a href="/" className="inline-flex flex-col items-center gap-2 group">
+        <a href="/" onClick={handleReturn} className="inline-flex flex-col items-center gap-2 group">
           <img
             src="/whorl.png"
             alt="spindle whorl"
-            className="w-28 animate-spin opacity-80 group-hover:opacity-100 group-active:opacity-60 transition-opacity duration-500"
-            style={{ animationDuration: "8s" }}
+            className="w-28 animate-spin opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+            style={{ animationDuration: returning ? "3s" : "8s" }}
           />
           <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
             click the spindle whorl to return to feed
