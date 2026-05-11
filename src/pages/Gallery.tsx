@@ -145,8 +145,16 @@ const Gallery = () => {
       ),
       withTimeout(
         fetchEuropeanaCollection(euroPage).then((items) => {
-          if (!controller.signal.aborted)
-            items.filter(isCollectionPiece).forEach((a) => addItem(a));
+          if (!controller.signal.aborted) {
+            const providerCount: Record<string, number> = {};
+            items.filter(isCollectionPiece).forEach((a) => {
+              const count = providerCount[a.museum] ?? 0;
+              if (count < 2) {
+                providerCount[a.museum] = count + 1;
+                addItem(a);
+              }
+            });
+          }
         }),
         3500
       ),
@@ -184,7 +192,7 @@ const Gallery = () => {
       (entries) => {
         if (entries[0].isIntersecting) loadMore();
       },
-      { rootMargin: "2000px" }
+      { rootMargin: "200px", threshold: 0.1 }
     );
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();

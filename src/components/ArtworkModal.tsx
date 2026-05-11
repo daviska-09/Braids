@@ -4,6 +4,7 @@ import type { Artwork } from "@/lib/artwork";
 import { addActivity, removeActivity, getActivities, isArtworkSaved } from "@/lib/activityStore";
 import { X, Link2, Mail, Bookmark } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface ArtworkModalProps {
   artwork: Artwork | null;
@@ -63,6 +64,16 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     const img = new Image();
     img.src = artwork.imageFull;
     img.onload = () => setImgSrc(artwork.imageFull);
+  }, [artwork?.id]);
+
+  useEffect(() => {
+    if (!artwork) return;
+    supabase.rpc("increment_artwork_view", {
+      p_artwork_id: artwork.id,
+      p_source:     artwork.source,
+      p_title:      artwork.title,
+      p_image_url:  artwork.imageSmall || artwork.imageFull,
+    });
   }, [artwork?.id]);
 
   if (!artwork) return null;

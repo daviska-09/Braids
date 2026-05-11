@@ -15,7 +15,7 @@ const FloatingFooter = () => (
       className="text-xs tracking-wide transition-opacity hover:opacity-70"
       style={{ color: BLUE }}
     >
-      About
+      about
     </NavLink>
   </div>
 );

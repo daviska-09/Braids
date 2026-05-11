@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 
 const About = () => {
   useEffect(() => {
-    document.title = "About | Reel Museum";
+    document.title = "about | Reel Museum";
     return () => { document.title = "Reel Museum"; };
   }, []);
 
   return (
     <div className="px-6 md:px-10 pb-20 max-w-2xl">
-      <h1 className="font-serif text-2xl md:text-3xl text-foreground mt-2 mb-8">About</h1>
+      <h1 className="font-serif text-2xl md:text-3xl text-foreground mt-2 mb-8">about</h1>
       <div className="space-y-5 text-sm md:text-base text-foreground/80 leading-relaxed">
         <p>
           On every inhabited continent, in every civilisation in the world, humans have spun thread

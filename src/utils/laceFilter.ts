@@ -32,6 +32,22 @@ export const COLLECTION_EXCLUDE_KEYWORDS: readonly string[] = [
   "etching",
   "engraving",
   "woodcut",
+  "sculpture",
+  "statue",
+  "statuette",
+];
+
+export const COLLECTION_INCLUDE_KEYWORDS: readonly string[] = [
+  // Textiles
+  "textile", "weaving", "woven", "weave",
+  "tapestry", "embroidery", "embroidered",
+  "costume", "fabric", "silk", "wool",
+  "carpet", "brocade", "linen", "cotton",
+  "velvet", "cloth", "thread", "fiber", "fibre",
+  "dyeing", "knitting", "knitted", "sewing", "sampler",
+  // Tools
+  "tool", "spindle", "loom", "needle",
+  "shuttle", "bobbin", "distaff", "whorl", "thimble",
 ];
 
 // ─── Predicates ───────────────────────────────────────────────────────────────
@@ -60,7 +76,8 @@ export function isCollection(item: ArtworkObject): boolean {
     item.department,
     ...item.tags,
   ].map((f) => (f || "").toLowerCase());
-  return !COLLECTION_EXCLUDE_KEYWORDS.some((kw) => fields.some((f) => f.includes(kw)));
+  if (COLLECTION_EXCLUDE_KEYWORDS.some((kw) => fields.some((f) => f.includes(kw)))) return false;
+  return COLLECTION_INCLUDE_KEYWORDS.some((kw) => fields.some((f) => f.includes(kw)));
 }
 
 /** Returns true if the artwork has an Irish provenance. */

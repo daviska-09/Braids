@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import FloatingFooter from "@/components/FloatingFooter";
 import { EXPLORED_KEY, getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
+import { supabase } from "@/lib/supabase";
+
+type ViewedArtwork = { artwork_id: string; title: string; image_url: string; view_count: number };
 
 // ── Hidden for redesign — do not delete ──
 // import { useMemo } from "react";
@@ -162,6 +165,17 @@ const Uncovered = () => {
     setResetVal("");
   };
 
+  const [mostViewed, setMostViewed] = useState<ViewedArtwork[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("artwork_views")
+      .select("artwork_id, title, image_url, view_count")
+      .order("view_count", { ascending: false })
+      .limit(6)
+      .then(({ data }) => { if (data) setMostViewed(data); });
+  }, []);
+
   const [returning, setReturning] = useState(false);
   const navigate = useNavigate();
 
@@ -210,6 +224,24 @@ const Uncovered = () => {
             click the spindle whorl to return to feed
           </span>
         </a>
+
+        {mostViewed.length > 0 && (
+          <div className="mt-12 text-left">
+            <p className="text-xs text-muted-foreground/60 uppercase tracking-widest mb-4">most viewed</p>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {mostViewed.map((a) => (
+                <div key={a.artwork_id} className="flex-none w-28">
+                  <img
+                    src={a.image_url}
+                    alt={a.title}
+                    className="w-28 h-28 object-cover rounded"
+                  />
+                  <p className="mt-1.5 text-[11px] text-muted-foreground leading-tight line-clamp-2">{a.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── HIDDEN FOR REDESIGN — DO NOT DELETE ──
