@@ -33,7 +33,15 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
         <img
           src={artwork.imageSmall}
           alt={artwork.title}
-          onLoad={() => setLoaded(true)}
+          onLoad={(e) => {
+            const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+            // Filter placeholder/icon images: too small, or small + nearly square
+            if (w < 100 || h < 100 || (w <= 280 && h <= 280 && Math.abs(w - h) < 20)) {
+              setFailed(true);
+              return;
+            }
+            setLoaded(true);
+          }}
           onError={() => setFailed(true)}
           className={`w-full block transition-transform duration-700 ease-out ${
             loaded ? "opacity-100" : "opacity-0 absolute inset-0"
