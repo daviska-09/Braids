@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import FloatingFooter from "@/components/FloatingFooter";
-import { EXPLORED_KEY, getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
+import { getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
 import { supabase } from "@/lib/supabase";
 
 type ViewedArtwork = { artwork_id: string; title: string; image_url: string; view_count: number };
@@ -57,8 +57,8 @@ const Uncovered = () => {
   const [globalExplored, setGlobalExplored]   = useState<number | null>(null);
   const [resetOpen, setResetOpen]             = useState(false);
   const [resetVal, setResetVal]               = useState("");
-  const prevExploredRef = useRef(0);
-  const animFrameRef    = useRef<number>(0);
+  const displayRef    = useRef(0);
+  const animFrameRef  = useRef<number>(0);
 
   // ── Hidden for redesign — do not delete ──
   // const [animDone, setAnimDone]           = useState(false);
@@ -84,53 +84,43 @@ const Uncovered = () => {
 
   useEffect(() => { document.title = "Explored | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
 
-  // Fetch combined total from all sources; seed explored on first visit
+  // Fetch combined total from all sources
   useEffect(() => {
     fetchCombinedTotal()
       .catch(() => 115000 + 16000 + 48000)
       .then((total) => {
         setTotalIds(total);
-        if (localStorage.getItem(EXPLORED_KEY) === null) {
-          const seed = Math.floor(total * 0.07);
-          localStorage.setItem(EXPLORED_KEY, String(seed));
-          setExplored(seed);
-        }
       });
   }, []);
 
   // Fetch global counter from Supabase once on mount
   useEffect(() => {
-    getGlobalExploredCount().then(setGlobalExplored);
+    getGlobalExploredCount().then((count) => {
+      setGlobalExplored(count);
+      setExplored(count);
+    });
   }, []);
 
-  // Poll localStorage every 2s so counter updates while user browses collection
-  useEffect(() => {
-    const read = () => {
-      const stored = localStorage.getItem(EXPLORED_KEY);
-      if (stored !== null) setExplored(Number(stored));
-    };
-    read();
-    const id = setInterval(read, 2000);
-    return () => clearInterval(id);
-  }, []);
 
   // Count-up animation when explored increases
   useEffect(() => {
-    const prev = prevExploredRef.current;
-    prevExploredRef.current = explored;
-    if (explored <= prev) {
+    if (explored <= displayRef.current) {
       setDisplayExplored(explored);
+      displayRef.current = explored;
       return;
     }
-    const start = performance.now();
-    const duration = 600;
-    const from = prev;
+    const from = displayRef.current;
     const to = explored;
+    const start = performance.now();
+    const duration = 8000;
     const step = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
-      setDisplayExplored(Math.round(from + (to - from) * eased));
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease-in-out
+      const value = Math.round(from + (to - from) * eased);
+      setDisplayExplored(value);
+      displayRef.current = value;
       if (t < 1) animFrameRef.current = requestAnimationFrame(step);
+      else displayRef.current = to;
     };
     cancelAnimationFrame(animFrameRef.current);
     animFrameRef.current = requestAnimationFrame(step);
@@ -200,7 +190,7 @@ const Uncovered = () => {
           ) : (
             <>
               <span className="font-medium" style={{ color: "#3AACAC" }}>
-                {(globalExplored ?? displayExplored).toLocaleString()}
+                {displayExplored.toLocaleString()}
               </span>
               {" "}objects explored out of{" "}
               <span className="font-medium" style={{ color: "#3AACAC" }}>
