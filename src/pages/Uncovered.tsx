@@ -112,7 +112,7 @@ const Uncovered = () => {
     const from = displayRef.current;
     const to = explored;
     const start = performance.now();
-    const duration = 8000;
+    const duration = 4000;
     const step = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease-in-out
