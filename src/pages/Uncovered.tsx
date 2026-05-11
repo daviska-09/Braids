@@ -172,12 +172,12 @@ const Uncovered = () => {
   const loading = totalIds === null;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 relative">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 py-8 md:py-0 relative">
       <div className="text-center max-w-xl">
-        <h1 className="font-serif text-4xl md:text-6xl font-normal mb-8">
+        <h1 className="font-serif text-4xl md:text-6xl font-normal mb-4 md:mb-8">
           archive explored
         </h1>
-        <p className="text-base md:text-lg text-muted-foreground mb-8">
+        <p className="text-base md:text-lg text-muted-foreground mb-4 md:mb-8">
           {loading ? (
             <>— objects explored out of — in the Reel Museum</>
           ) : (
@@ -193,14 +193,14 @@ const Uncovered = () => {
             </>
           )}
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+        <p className="text-sm text-muted-foreground leading-relaxed mb-3 md:mb-4">
           through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
         </p>
         <a href="/" onClick={handleReturn} className="inline-flex flex-col items-center gap-2 group">
           <img
             src="/whorl.png"
             alt="spindle whorl"
-            className="w-28 animate-spin opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+            className="w-20 md:w-28 animate-spin opacity-80 group-hover:opacity-100 transition-opacity duration-500"
             style={{ animationDuration: returning ? "3s" : "8s" }}
           />
           <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
