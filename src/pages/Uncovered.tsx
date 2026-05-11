@@ -53,12 +53,12 @@ async function fetchCombinedTotal(): Promise<number> {
 const Uncovered = () => {
   const [totalIds, setTotalIds]               = useState<number | null>(null);
   const [explored, setExplored]               = useState(0);
-  const [displayExplored, setDisplayExplored] = useState(0);
   const [globalExplored, setGlobalExplored]   = useState<number | null>(null);
   const [resetOpen, setResetOpen]             = useState(false);
   const [resetVal, setResetVal]               = useState("");
-  const displayRef    = useRef(0);
-  const animFrameRef  = useRef<number>(0);
+  const [displayStr, setDisplayStr]           = useState("");
+  const [typing, setTyping]                   = useState(false);
+  const typeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Hidden for redesign — do not delete ──
   // const [animDone, setAnimDone]           = useState(false);
@@ -102,29 +102,22 @@ const Uncovered = () => {
   }, []);
 
 
-  // Count-up animation when explored increases
+  // Typewriter effect when explored lands
   useEffect(() => {
-    if (explored <= displayRef.current) {
-      setDisplayExplored(explored);
-      displayRef.current = explored;
-      return;
-    }
-    const from = displayRef.current;
-    const to = explored;
-    const start = performance.now();
-    const duration = 4000;
-    const step = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease-in-out
-      const value = Math.round(from + (to - from) * eased);
-      setDisplayExplored(value);
-      displayRef.current = value;
-      if (t < 1) animFrameRef.current = requestAnimationFrame(step);
-      else displayRef.current = to;
+    if (typeTimerRef.current) clearTimeout(typeTimerRef.current);
+    if (explored === 0) { setDisplayStr(""); return; }
+    const target = explored.toLocaleString();
+    setDisplayStr("");
+    setTyping(true);
+    let i = 0;
+    const typeNext = () => {
+      i++;
+      setDisplayStr(target.slice(0, i));
+      if (i < target.length) typeTimerRef.current = setTimeout(typeNext, 350);
+      else setTyping(false);
     };
-    cancelAnimationFrame(animFrameRef.current);
-    animFrameRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animFrameRef.current);
+    typeTimerRef.current = setTimeout(typeNext, 400);
+    return () => { if (typeTimerRef.current) clearTimeout(typeTimerRef.current); };
   }, [explored]);
 
   // ── Hidden: derived points + handlers — do not delete ──
@@ -190,7 +183,7 @@ const Uncovered = () => {
           ) : (
             <>
               <span className="font-medium" style={{ color: "#3AACAC" }}>
-                {displayExplored.toLocaleString()}
+                {displayStr}{typing && <span className="animate-pulse">|</span>}
               </span>
               {" "}objects explored out of{" "}
               <span className="font-medium" style={{ color: "#3AACAC" }}>
