@@ -7,7 +7,7 @@ import ArtworkModal from "@/components/ArtworkModal";
 import Masonry from "react-masonry-css";
 import { recordExplored } from "@/lib/exploredCounter";
 
-const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
+const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 640: 2 };
 const BATCH_SIZE = 11;
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {

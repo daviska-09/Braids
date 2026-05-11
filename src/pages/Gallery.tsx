@@ -10,7 +10,7 @@ import Masonry from "react-masonry-css";
 import { X } from "lucide-react";
 import { recordExplored } from "@/lib/exploredCounter";
 
-const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 0: 2 };
+const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 640: 2 };
 
 const BATCH_SIZE = 8;
 
