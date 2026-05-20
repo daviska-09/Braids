@@ -102,10 +102,11 @@ const Uncovered = () => {
   }, []);
 
 
-  // Typewriter effect when explored lands
+  // Typewriter effect when explored lands — gated on totalIds so the counter
+  // is visible before the animation starts (avoids race on first load).
   useEffect(() => {
     if (typeTimerRef.current) clearTimeout(typeTimerRef.current);
-    if (explored === 0) { setDisplayStr(""); return; }
+    if (explored === 0 || totalIds === null) { setDisplayStr(""); return; }
     const target = explored.toLocaleString();
     setDisplayStr("");
     setTyping(true);
@@ -118,7 +119,7 @@ const Uncovered = () => {
     };
     typeTimerRef.current = setTimeout(typeNext, 400);
     return () => { if (typeTimerRef.current) clearTimeout(typeTimerRef.current); };
-  }, [explored]);
+  }, [explored, totalIds]);
 
   // ── Hidden: derived points + handlers — do not delete ──
   // const basePoints = useMemo<GlobePoint[]>(() => origins.map(({ label, lat, lng }) => ({ label, lat, lng })), [origins]);
@@ -194,7 +195,7 @@ const Uncovered = () => {
           )}
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mb-3 md:mb-4">
-          through these objects we see how civilisation is constructed: not only by conquest and industrialisation, but by the tangible and cultural forces that we have woven into our existence.
+          through these objects we see how civilisation is constructed. not just by conquest and industrialisation, but also through expressive and cultural forces that we have woven into our lives.
         </p>
         <a href="/" onClick={handleReturn} className="inline-flex flex-col items-center gap-2 group">
           <img
