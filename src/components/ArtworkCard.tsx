@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import type { Artwork } from "@/lib/artwork";
+import { useTranslatedArtwork } from "@/hooks/useTranslatedArtwork";
 
 interface ArtworkCardProps {
   artwork: Artwork;
@@ -9,6 +10,7 @@ interface ArtworkCardProps {
 }
 
 const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
+  const display = useTranslatedArtwork(artwork) ?? artwork;
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -54,16 +56,16 @@ const ArtworkCard = ({ artwork, index, onClick }: ArtworkCardProps) => {
           transition={{ duration: 0.3 }}
         >
           <p className="text-primary-foreground text-sm font-serif leading-snug line-clamp-2">
-            {artwork.title}
+            {display.title}
           </p>
-          {artwork.artist && (
+          {display.artist && (
             <p className="text-primary-foreground/70 text-xs mt-1">
-              {artwork.artist}
+              {display.artist}
             </p>
           )}
-          {artwork.date && (
+          {display.date && (
             <p className="text-primary-foreground/50 text-xs mt-0.5">
-              {artwork.date}
+              {display.date}
             </p>
           )}
         </motion.div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useT } from "@/contexts/LanguageContext";
+import { useTranslatedArtwork } from "@/hooks/useTranslatedArtwork";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Artwork } from "@/lib/artwork";
 import { addActivity, removeActivity, getActivities, isArtworkSaved } from "@/lib/activityStore";
@@ -16,6 +17,7 @@ interface ArtworkModalProps {
 
 const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProps) => {
   const t = useT();
+  const display = useTranslatedArtwork(artwork) ?? artwork;
   const [showPostcard, setShowPostcard] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [scale, setScale] = useState(1);
@@ -209,21 +211,21 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
               )}
             </div>
             <div className="md:w-1/2 p-8 flex flex-col justify-center">
-              <h2 className="font-serif text-xl leading-snug mb-3">{artwork.title}</h2>
-              {artwork.artist && (
-                <p className="text-sm text-muted-foreground mb-1">{artwork.artist}</p>
+              <h2 className="font-serif text-xl leading-snug mb-3">{display?.title}</h2>
+              {display?.artist && (
+                <p className="text-sm text-muted-foreground mb-1">{display.artist}</p>
               )}
-              {artwork.artistBio && (
-                <p className="text-xs text-muted-foreground mb-4">{artwork.artistBio}</p>
+              {display?.artistBio && (
+                <p className="text-xs text-muted-foreground mb-4">{display.artistBio}</p>
               )}
               <div className="space-y-2 text-xs text-muted-foreground">
-                {artwork.date && <Detail label={t.modal.date} value={artwork.date} />}
-                {artwork.medium && <Detail label={t.modal.medium} value={artwork.medium} />}
-                {artwork.dimensions && <Detail label={t.modal.dimensions} value={artwork.dimensions} />}
-                {artwork.culture && <Detail label={t.modal.culture} value={artwork.culture} />}
-                {artwork.classification && <Detail label={t.modal.classification} value={artwork.classification} />}
-                {artwork.department && <Detail label={t.modal.department} value={artwork.department} />}
-                {artwork.credit && <Detail label={t.modal.credit} value={artwork.credit} />}
+                {display?.date && <Detail label={t.modal.date} value={display.date} />}
+                {display?.medium && <Detail label={t.modal.medium} value={display.medium} />}
+                {display?.dimensions && <Detail label={t.modal.dimensions} value={display.dimensions} />}
+                {display?.culture && <Detail label={t.modal.culture} value={display.culture} />}
+                {display?.classification && <Detail label={t.modal.classification} value={display.classification} />}
+                {display?.department && <Detail label={t.modal.department} value={display.department} />}
+                {display?.credit && <Detail label={t.modal.credit} value={display.credit} />}
               </div>
 
               {onNoteChange && (
