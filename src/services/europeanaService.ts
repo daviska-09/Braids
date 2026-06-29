@@ -1,5 +1,6 @@
 import { type ArtworkObject, adaptEuropeanaItem } from "@/types/artwork";
 import { cacheGet, cacheSet } from "@/utils/artworkCache";
+import { translateArtwork } from "@/services/translationService";
 
 const BASE = "https://api.europeana.eu/record/v2/search.json";
 const API_KEY = import.meta.env.VITE_EUROPEANA_API_KEY as string;
@@ -111,9 +112,10 @@ async function fetchEuropeana(
       if (!res.ok) return [];
 
       const json = await res.json() as { items?: Record<string, unknown>[] };
-      const artworks = (json.items ?? [])
+      const adapted = (json.items ?? [])
         .map(adaptEuropeanaItem)
         .filter((x): x is ArtworkObject => x !== null);
+      const artworks = await Promise.all(adapted.map(translateArtwork));
 
       // Shuffle so results don't always appear in Europeana's default collection order
       for (let i = artworks.length - 1; i > 0; i--) {

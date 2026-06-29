@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useT } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import FloatingFooter from "@/components/FloatingFooter";
 import { getGlobalExploredCount, resetGlobalExploredCount } from "@/lib/exploredCounter";
@@ -51,6 +52,7 @@ async function fetchCombinedTotal(): Promise<number> {
 }
 
 const Uncovered = () => {
+  const t = useT();
   const [totalIds, setTotalIds]               = useState<number | null>(null);
   const [explored, setExplored]               = useState(0);
   const [globalExplored, setGlobalExplored]   = useState<number | null>(null);
@@ -176,7 +178,7 @@ const Uncovered = () => {
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 py-8 md:py-0 relative">
       <div className="text-center max-w-xl">
         <h1 className="font-serif text-4xl md:text-6xl font-normal mb-4 md:mb-8">
-          archive explored
+          {t.explored.heading}
         </h1>
         <p className="text-base md:text-lg text-muted-foreground mb-4 md:mb-8">
           {loading ? (
@@ -186,16 +188,16 @@ const Uncovered = () => {
               <span className="font-medium" style={{ color: "#3AACAC" }}>
                 {displayStr}{typing && <span className="animate-pulse">|</span>}
               </span>
-              {" "}objects explored out of{" "}
+              {" "}{t.explored.objectsOut}{" "}
               <span className="font-medium" style={{ color: "#3AACAC" }}>
                 {totalIds.toLocaleString()}
               </span>
-              {" "}in the Reel Museum
+              {" "}{t.explored.inMuseum}
             </>
           )}
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mb-3 md:mb-4">
-          through these objects we see how civilisation is constructed. not just by conquest and industrialisation, but also through expressive and cultural forces that we have woven into our lives.
+          {t.explored.detail}
         </p>
         <a href="/" onClick={handleReturn} className="inline-flex flex-col items-center gap-2 group">
           <img
@@ -205,7 +207,7 @@ const Uncovered = () => {
             style={{ animationDuration: returning ? "3s" : "8s" }}
           />
           <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-            click the spindle whorl to return to feed
+            {t.explored.returnHint}
           </span>
         </a>
 

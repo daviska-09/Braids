@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useT } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Artwork } from "@/lib/artwork";
 import { addActivity, removeActivity, getActivities, isArtworkSaved } from "@/lib/activityStore";
@@ -14,6 +15,7 @@ interface ArtworkModalProps {
 }
 
 const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProps) => {
+  const t = useT();
   const [showPostcard, setShowPostcard] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [scale, setScale] = useState(1);
@@ -82,16 +84,16 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     ? `${window.location.origin}/?artwork=${artwork.id}`
     : artwork.objectUrl;
   const viewLabel =
-    artwork.source === "europeana" ? "View on europeana.eu →" :
-    artwork.museum === "The Metropolitan Museum of Art" ? "View on metmuseum.org →" :
-    "View on artic.edu →";
+    artwork.source === "europeana" ? `${t.modal.viewOn} europeana.eu →` :
+    artwork.museum === "The Metropolitan Museum of Art" ? `${t.modal.viewOn} metmuseum.org →` :
+    `${t.modal.viewOn} artic.edu →`;
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      toast("Link copied to clipboard");
+      toast(t.modal.toastLinkCopied);
     } catch {
-      toast("Couldn't copy — try copying the URL from the address bar");
+      toast(t.modal.toastCopyFail);
     }
   };
 
@@ -100,7 +102,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
       const entry = getActivities().find((a) => a.artworkId === artwork.id && a.action === "saved");
       if (entry) removeActivity(entry.id);
       setIsSaved(false);
-      toast("Removed from collection");
+      toast(t.modal.toastRemoved);
     } else {
       addActivity({
         artworkId: artwork.id,
@@ -123,7 +125,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
         artworkSource: artwork.source,
       });
       setIsSaved(true);
-      toast("Saved to collection");
+      toast(t.modal.toastSaved);
     }
   };
 
@@ -156,7 +158,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
       artworkMuseum: artwork.museum,
       artworkSource: artwork.source,
     });
-    toast("Dispatch ready to send");
+    toast(t.modal.toastDispatched);
     setEmail("");
     setSenderName("");
     setShowPostcard(false);
@@ -209,13 +211,13 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                 <p className="text-xs text-muted-foreground mb-4">{artwork.artistBio}</p>
               )}
               <div className="space-y-2 text-xs text-muted-foreground">
-                {artwork.date && <Detail label="Date" value={artwork.date} />}
-                {artwork.medium && <Detail label="Medium" value={artwork.medium} />}
-                {artwork.dimensions && <Detail label="Dimensions" value={artwork.dimensions} />}
-                {artwork.culture && <Detail label="Culture" value={artwork.culture} />}
-                {artwork.classification && <Detail label="Classification" value={artwork.classification} />}
-                {artwork.department && <Detail label="Department" value={artwork.department} />}
-                {artwork.credit && <Detail label="Credit" value={artwork.credit} />}
+                {artwork.date && <Detail label={t.modal.date} value={artwork.date} />}
+                {artwork.medium && <Detail label={t.modal.medium} value={artwork.medium} />}
+                {artwork.dimensions && <Detail label={t.modal.dimensions} value={artwork.dimensions} />}
+                {artwork.culture && <Detail label={t.modal.culture} value={artwork.culture} />}
+                {artwork.classification && <Detail label={t.modal.classification} value={artwork.classification} />}
+                {artwork.department && <Detail label={t.modal.department} value={artwork.department} />}
+                {artwork.credit && <Detail label={t.modal.credit} value={artwork.credit} />}
               </div>
 
               {onNoteChange && (
@@ -226,7 +228,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                     const val = e.currentTarget.value.trim();
                     if (val !== (note ?? "").trim()) onNoteChange(val);
                   }}
-                  placeholder="Add a note..."
+                  placeholder={t.modal.addNote}
                   rows={2}
                   className="mt-4 w-full resize-none bg-transparent text-xs text-foreground/70 placeholder:text-foreground/25 outline-none border-none focus:ring-0 leading-relaxed"
                 />
@@ -238,19 +240,19 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                   onClick={handleSave}
                   className={`flex items-center gap-1.5 text-xs transition-colors ${isSaved ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Bookmark className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} /> {isSaved ? "saved" : "save to collection"}
+                  <Bookmark className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} /> {isSaved ? t.modal.saved : t.modal.saveToCollection}
                 </button>
                 <button
                   onClick={handleCopyLink}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Link2 className="w-3.5 h-3.5" /> copy link
+                  <Link2 className="w-3.5 h-3.5" /> {t.modal.copyLink}
                 </button>
                 <button
                   onClick={() => setShowPostcard((v) => !v)}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5" /> dispatch
+                  <Mail className="w-3.5 h-3.5" /> {t.modal.dispatch}
                 </button>
               </div>
 
@@ -260,7 +262,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                     type="text"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
-                    placeholder="your name"
+                    placeholder={t.modal.yourName}
                     className="text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                     onKeyDown={(e) => e.key === "Enter" && handleSendPostcard()}
                   />
@@ -269,7 +271,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="recipient@email.com"
+                      placeholder={t.modal.recipientPlaceholder}
                       className="flex-1 text-xs px-3 py-1.5 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                       onKeyDown={(e) => e.key === "Enter" && handleSendPostcard()}
                     />
@@ -277,7 +279,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
                       onClick={handleSendPostcard}
                       className="text-xs px-3 py-1.5 bg-accent text-accent-foreground rounded hover:opacity-90 transition-opacity"
                     >
-                      send
+                      {t.modal.send}
                     </button>
                   </div>
                 </div>
@@ -333,7 +335,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
             draggable={false}
           />
           <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs">
-            scroll or click to zoom · drag to pan · esc to close
+            {t.modal.zoomHint}
           </p>
         </div>
       )}

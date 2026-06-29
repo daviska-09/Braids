@@ -9,6 +9,7 @@ import ArtworkModal from "@/components/ArtworkModal";
 import Masonry from "react-masonry-css";
 import { X } from "lucide-react";
 import { recordExplored } from "@/lib/exploredCounter";
+import { useT } from "@/contexts/LanguageContext";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 640: 2 };
 
@@ -56,6 +57,7 @@ async function fetchMixedTextileIds(): Promise<TaggedId[]> {
 }
 
 const Gallery = () => {
+  const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const originsParam = searchParams.get("origins");
   const origins = originsParam ? originsParam.split(",").map((s) => s.trim()) : [];
@@ -226,15 +228,15 @@ const Gallery = () => {
 
       {!origins.length && (
         <p className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-5 md:mb-10 max-w-xl">
-          every object and thread tells a story.
+          {t.gallery.subtitle}
         </p>
       )}
 
       {filteredArtworks.length === 0 && pendingSkeletons === 0 && !loading ? (
         <div className="text-center py-20 text-muted-foreground">
-          <p className="text-sm">no works found matching these origins yet.</p>
+          <p className="text-sm">{t.gallery.noResults}</p>
           <button onClick={clearFilter} className="mt-2 text-xs underline hover:text-foreground transition-colors">
-            view all works
+            {t.gallery.viewAll}
           </button>
         </div>
       ) : (

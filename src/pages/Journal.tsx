@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useT } from "@/contexts/LanguageContext";
 import FloatingFooter from "@/components/FloatingFooter";
 import { getPosts, addPost, updatePost, deletePost, isAdmin, toggleAdmin, initPosts, exportPostsJson, type BlogPost } from "@/lib/blogStore";
 import { Plus, Pencil, Trash2, Download } from "lucide-react";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Journal = () => {
+  const t = useT();
   const [posts, setPosts] = useState<BlogPost[]>(getPosts);
   const [admin, setAdmin] = useState(isAdmin);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -60,10 +62,10 @@ const Journal = () => {
           if (e.detail === 3) handleTripleClick();
         }}
       >
-        Field Notes
+        {t.journal.heading}
       </p>
       <p className="font-serif text-sm md:text-base text-foreground/60 -mt-8 mb-10 max-w-xl select-none">
-        Email us: <a href="mailto:info@reelmuseum.com" className="underline hover:text-foreground transition-colors">info@reelmuseum.com</a>
+        {t.journal.emailUs} <a href="mailto:info@reelmuseum.com" className="underline hover:text-foreground transition-colors">info@reelmuseum.com</a>
       </p>
 
 

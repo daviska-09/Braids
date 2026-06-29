@@ -6,6 +6,7 @@ import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
 import Masonry from "react-masonry-css";
 import { recordExplored } from "@/lib/exploredCounter";
+import { useT } from "@/contexts/LanguageContext";
 
 const MASONRY_BREAKPOINTS = { default: 5, 1280: 5, 1024: 4, 768: 3, 640: 2 };
 const BATCH_SIZE = 11;
@@ -67,6 +68,7 @@ async function fetchIrishMixedLaceIds(): Promise<TaggedId[]> {
 }
 
 const LaceArchive = () => {
+  const t = useT();
   const [irishOnly, setIrishOnly] = useState(false);
   const [allIds, setAllIds] = useState<TaggedId[]>([]);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -186,20 +188,20 @@ const LaceArchive = () => {
     <div className="px-6 md:px-10 pb-20">
       <div className="mt-2 mb-10 max-w-xl">
         <p className="font-serif text-lg md:text-xl text-foreground/80">
-          a dedicated archive of lace and crochet from across human history. these are the most delicate threads in the collection.
+          {t.lace.subtitle}
         </p>
         <div className="flex items-center gap-6 mt-4 text-sm tracking-wide">
           <button
             onClick={() => setIrishOnly(false)}
             className={!irishOnly ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}
           >
-            all lace
+            {t.lace.allLace}
           </button>
           <button
             onClick={() => setIrishOnly(true)}
             className={irishOnly ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground transition-colors"}
           >
-            irish lace
+            {t.lace.irishLace}
           </button>
         </div>
       </div>

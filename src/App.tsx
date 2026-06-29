@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Bookmark } from "lucide-react";
 import Header from "@/components/Header";
 import LandingOverlay from "@/components/LandingOverlay";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Gallery from "@/pages/Gallery";
 import Uncovered from "@/pages/Uncovered";
 import CurateTogether from "@/pages/CurateTogether";
@@ -19,6 +20,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <LanguageProvider>
     <TooltipProvider>
       <LandingOverlay />
       <Toaster />
@@ -47,6 +49,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

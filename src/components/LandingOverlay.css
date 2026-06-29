@@ -42,7 +42,7 @@
 }
 
 /* ---------- "tap to explore the archive" ---------- */
-/* 26 characters — monospace so ch units are exact */
+/* animation shorthand + step count are set via inline style per language */
 #rm-label {
   font-family: var(--rm-font);
   font-size: clamp(1.125rem, 2.7vw, 1.45rem);
@@ -55,13 +55,42 @@
   overflow: hidden;
   width: 0;
   text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-  animation: rm-typing 0.8s steps(26, end) 0.2s forwards;
 }
 
 @keyframes rm-typing {
   from { width: 0; }
-  /* ch covers character widths; the extra 1.2em covers letter-spacing across 26 chars */
-  to   { width: calc(26ch + 1.2em); }
+  to   { width: var(--rm-label-width); }
+}
+
+/* ---------- Language toggle ---------- */
+#rm-lang-toggle {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.25rem;
+  z-index: 2;
+}
+
+#rm-lang-toggle button {
+  font-family: var(--rm-font);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+#rm-lang-toggle button:hover {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+#rm-lang-toggle button.rm-lang-active {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* ---------- Spindle whorl ---------- */
@@ -110,7 +139,7 @@
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   #rm-whorl    { animation: none; }
-  #rm-label    { animation: none; width: calc(26ch + 1.2em); opacity: 0.75; }
+  #rm-label    { animation: none; width: var(--rm-label-width); opacity: 0.75; }
   #rm-stage    { animation: none; }
   #rm-landing-overlay { transition: opacity 0.3s ease; }
 }

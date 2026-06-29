@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useT } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { getActivities, onActivityChange, removeActivity, updateNote, hydrateFromSupabase, type ActivityEntry } from "@/lib/activityStore";
 import type { Artwork } from "@/lib/artwork";
@@ -38,6 +39,7 @@ function toArtwork(a: ActivityEntry): Artwork {
 }
 
 const CurateTogether = () => {
+  const t = useT();
   const [activities, setActivities] = useState<ActivityEntry[]>(getActivities);
   const [selectedEntry, setSelectedEntry] = useState<ActivityEntry | null>(null);
 
@@ -53,15 +55,13 @@ const CurateTogether = () => {
     <div className="px-6 md:px-10 pb-20">
       {/* CHANGE 1: copy update */}
       <p className="font-serif text-lg md:text-xl text-foreground/80 mt-2 mb-10 max-w-xl">
-        Your log of saved and sent items
+        {t.saved.subtitle}
       </p>
 
       {activities.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <p className="text-sm">nothing here yet.</p>
-          <p className="text-xs mt-2">
-            explore the collection — save or send works to see them appear here.
-          </p>
+          <p className="text-sm">{t.saved.empty}</p>
+          <p className="text-xs mt-2">{t.saved.emptyHint}</p>
         </div>
       ) : (
         /* CHANGE 2: masonry grid via CSS columns */
