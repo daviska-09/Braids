@@ -216,6 +216,22 @@ export function removeActivity(id: string) {
     });
 }
 
+export function updateArtworkImage(id: string, imageUrl: string) {
+  const activities = getActivities().map((a) =>
+    a.id === id ? { ...a, artworkImage: imageUrl } : a
+  );
+  saveActivities(activities);
+
+  supabase
+    .from("saved_items")
+    .update({ artwork_image: imageUrl })
+    .eq("id", id)
+    .eq("user_id", getUserId())
+    .then(({ error }) => {
+      if (error) console.warn("[activityStore] update image failed", error);
+    });
+}
+
 export function isArtworkSaved(artworkId: string): boolean {
   return getActivities().some((a) => a.artworkId === artworkId && a.action === "saved");
 }
