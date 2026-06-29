@@ -62,10 +62,16 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     setImgLoaded(false);
     setImgFailed(false);
     setIsSaved(isArtworkSaved(artwork.id));
+
+    // Mobile browsers often skip onLoad for cached images — probe cache directly
+    const probe = new Image();
+    probe.src = artwork.imageSmall;
+    if (probe.complete) setImgLoaded(true);
+
     if (!artwork.imageFull) return;
-    const img = new Image();
-    img.src = artwork.imageFull;
-    img.onload = () => setImgSrc(artwork.imageFull);
+    const full = new Image();
+    full.src = artwork.imageFull;
+    full.onload = () => setImgSrc(artwork.imageFull);
   }, [artwork?.id]);
 
   useEffect(() => {
