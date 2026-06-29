@@ -63,8 +63,7 @@ const Journal = () => {
         Field Notes
       </p>
       <p className="font-serif text-sm md:text-base text-foreground/60 -mt-8 mb-10 max-w-xl select-none">
-        Want to write for us? Reach out with a pitch (no more than 500 words) to{" "}
-        <a href="mailto:info@reelmuseum.com" className="underline hover:text-foreground transition-colors">info@reelmuseum.com</a>
+        Email us: <a href="mailto:info@reelmuseum.com" className="underline hover:text-foreground transition-colors">info@reelmuseum.com</a>
       </p>
 
 
