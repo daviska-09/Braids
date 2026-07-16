@@ -6,7 +6,7 @@ export const CACHE_VERSION = 1;
 
 export interface ArtworkObject {
   id: string;
-  source: "met" | "aic" | "europeana";
+  source: "met" | "aic" | "europeana" | "va";
   title: string;
   artist: string;
   artistBio: string;
@@ -80,6 +80,23 @@ export interface ArticObject {
 
 export type EuropeanaItem = Record<string, unknown>;
 
+export interface VARecord {
+  systemNumber: string;
+  _primaryTitle: string;
+  _primaryMaker?: { name: string; association?: string };
+  _primaryDate?: string;
+  _primaryImageId?: string;
+  _images?: {
+    _primary_thumbnail?: string;
+    _iiif_image_base_url?: string;
+  };
+  _primaryPlace?: string;
+  objectType?: string;
+  briefDescription?: string;
+  materials?: string[];
+  techniques?: string[];
+}
+
 // ─── Adapter functions ───────────────────────────────────────────────────────
 // Each returns ArtworkObject | null. null means "no usable image or title".
 
@@ -132,6 +149,39 @@ export function adaptAICObject(obj: ArticObject): ArtworkObject | null {
     objectUrl: `https://www.artic.edu/artworks/${obj.id}`,
     museum: "Art Institute of Chicago",
     tags: [],
+  };
+}
+
+export function adaptVARecord(rec: VARecord): ArtworkObject | null {
+  if (!rec._primaryImageId || !rec._primaryTitle) return null;
+  const imageId = rec._primaryImageId;
+  const imageSmall = `https://framemark.vam.ac.uk/collections/${imageId}/full/!400,400/0/default.jpg`;
+  const imageFull = `https://framemark.vam.ac.uk/collections/${imageId}/full/!1200,1200/0/default.jpg`;
+  const materialTags = [
+    ...(rec.materials ?? []),
+    ...(rec.techniques ?? []),
+  ];
+  return {
+    id: rec.systemNumber,
+    source: "va",
+    title: rec._primaryTitle,
+    artist: rec._primaryMaker?.name ?? "",
+    artistBio: "",
+    date: rec._primaryDate ?? "",
+    culture: rec._primaryPlace ?? "",
+    country: rec._primaryPlace ?? "",
+    region: "",
+    artistNationality: "",
+    medium: materialTags.join(", "),
+    dimensions: "",
+    classification: rec.objectType ?? "",
+    department: "",
+    credit: "",
+    imageSmall,
+    imageFull,
+    objectUrl: `https://collections.vam.ac.uk/item/${rec.systemNumber}/`,
+    museum: "Victoria and Albert Museum",
+    tags: materialTags,
   };
 }
 

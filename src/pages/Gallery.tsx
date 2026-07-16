@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { fetchTextileObjectIds, fetchObject } from "@/lib/metApi";
 import { fetchArtwork, fromMetObject, interleave, type Artwork, type TaggedId } from "@/lib/artwork";
 import { fetchEuropeanaCollection, clearEuropeanaCollectionCache } from "@/services/europeanaService";
+import { fetchVATextiles, clearVACache } from "@/services/vaService";
 import { isCollectionPiece } from "@/utils/textileFilters";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtworkModal from "@/components/ArtworkModal";
@@ -73,6 +74,7 @@ const Gallery = () => {
   const abortRef = useRef<AbortController | null>(null);
   const prefetchAbortRef = useRef<AbortController | null>(null);
   const euroPageRef = useRef(Math.floor(Math.random() * 80) + 1);
+  const vaPageRef = useRef(Math.floor(Math.random() * 50) + 1);
 
   useEffect(() => { document.title = "Main Archive | Reel Museum"; return () => { document.title = "Reel Museum"; }; }, []);
 
@@ -88,16 +90,18 @@ const Gallery = () => {
 
   useEffect(() => {
     clearEuropeanaCollectionCache();
+    clearVACache();
     abortRef.current?.abort();
     setArtworks([]);
     setCursor(0);
     euroPageRef.current = Math.floor(Math.random() * 80) + 1;
+    vaPageRef.current = Math.floor(Math.random() * 50) + 1;
     setLoading(true);
     loadingRef.current = false;
     setPendingSkeletons(BATCH_SIZE);
     fetchMixedTextileIds().then((ids) => {
       setAllIds(ids);
-      loadBatch(ids, 0, euroPageRef.current);
+      loadBatch(ids, 0, euroPageRef.current, vaPageRef.current);
     });
     return () => { abortRef.current?.abort(); prefetchAbortRef.current?.abort(); };
   }, [originsParam]);
@@ -105,7 +109,7 @@ const Gallery = () => {
   // Fires the same fetches as loadBatch but never touches React state — its
   // only purpose is to populate sessionStorage so the NEXT real loadBatch call
   // returns from cache immediately.
-  const prefetchBatch = (ids: TaggedId[], start: number, euroPage: number) => {
+  const prefetchBatch = (ids: TaggedId[], start: number, euroPage: number, vaPage: number) => {
     if (start >= ids.length) return;
     prefetchAbortRef.current?.abort();
     const controller = new AbortController();
@@ -116,10 +120,11 @@ const Gallery = () => {
         withTimeout(fetchArtwork(item, 1, controller.signal), 3000)
       ),
       withTimeout(fetchEuropeanaCollection(euroPage), 6000),
+      withTimeout(fetchVATextiles(vaPage, controller.signal), 6000),
     ]);
   };
 
-  const loadBatch = async (ids: TaggedId[], start: number, euroPage: number) => {
+  const loadBatch = async (ids: TaggedId[], start: number, euroPage: number, vaPage: number) => {
     if (start >= ids.length) return;
     // Do NOT abort the prefetch here — it may already be warming sessionStorage
     // for this exact batch. Reads are cache-first so there is no harm in both
@@ -160,6 +165,14 @@ const Gallery = () => {
         }),
         3500
       ),
+      withTimeout(
+        fetchVATextiles(vaPage, controller.signal).then((items) => {
+          if (!controller.signal.aborted) {
+            items.filter(isCollectionPiece).forEach(addItem);
+          }
+        }),
+        4000
+      ),
     ]);
 
     // Shuffle everything together then display as one batch.
@@ -174,19 +187,20 @@ const Gallery = () => {
     if (!controller.signal.aborted) {
       setCursor(start + slice.length);
       euroPageRef.current = Math.floor(Math.random() * 80) + 1;
+      vaPageRef.current = Math.floor(Math.random() * 50) + 1;
       setLoading(false);
       setPendingSkeletons(0);
       loadingRef.current = false;
 
       // Kick off background prefetch for the next batch so items land in
       // sessionStorage before the user scrolls to trigger the real load.
-      prefetchBatch(ids, start + slice.length, euroPageRef.current);
+      prefetchBatch(ids, start + slice.length, euroPageRef.current, vaPageRef.current);
     }
   };
 
   const loadMore = useCallback(() => {
     if (loadingRef.current || cursor >= allIds.length) return;
-    loadBatch(allIds, cursor, euroPageRef.current);
+    loadBatch(allIds, cursor, euroPageRef.current, vaPageRef.current);
   }, [allIds, cursor]);
 
   useEffect(() => {
