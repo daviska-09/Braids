@@ -93,6 +93,7 @@ const ArtworkModal = ({ artwork, onClose, note, onNoteChange }: ArtworkModalProp
     : artwork.objectUrl;
   const viewLabel =
     artwork.source === "europeana" ? `${t.modal.viewOn} europeana.eu →` :
+    artwork.source === "va" ? `${t.modal.viewOn} collections.vam.ac.uk →` :
     artwork.museum === "The Metropolitan Museum of Art" ? `${t.modal.viewOn} metmuseum.org →` :
     `${t.modal.viewOn} artic.edu →`;
 
