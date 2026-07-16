@@ -45,6 +45,10 @@ export const COLLECTION_INCLUDE_KEYWORDS: readonly string[] = [
   "carpet", "brocade", "linen", "cotton",
   "velvet", "cloth", "thread", "fiber", "fibre",
   "dyeing", "knitting", "knitted", "sewing", "sampler",
+  // Garments (covers V&A objectType values like "Dress", "Evening dress", "Waistcoat")
+  "dress", "garment", "gown", "robe", "waistcoat",
+  "jacket", "coat", "cloak", "mantle", "tunic",
+  "skirt", "bodice", "blouse", "shawl", "veil",
   // Tools
   "tool", "spindle", "loom", "needle",
   "shuttle", "bobbin", "distaff", "whorl", "thimble",
